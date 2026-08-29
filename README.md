@@ -168,6 +168,11 @@ encaminhar a API local e instalar o APK. O `adb reverse` liga o aplicativo no ap
 `127.0.0.1:8765` no computador. Consulte
 [`docs/development/android-vscode.md`](docs/development/android-vscode.md).
 
+O botão **Usar microfone** solicita `RECORD_AUDIO` somente após ação explícita, usa o reconhecedor de
+fala disponível no Android e coloca a transcrição no campo para revisão antes do envio. A
+disponibilidade e eventual uso de rede dependem do serviço de fala instalado no próprio aparelho;
+quando indisponível, o texto continua sendo o fallback.
+
 ## Cliente Linux
 
 O cliente em [`apps/linux`](apps/linux) usa Flutter/Dart e compartilha o contrato HTTP do núcleo.

@@ -11,8 +11,8 @@ android {
         applicationId = "dev.lzagent.android"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0-alpha.1"
+        versionCode = 6
+        versionName = "0.1.0-alpha.6"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "AGENT_URL", "\"http://127.0.0.1:8765\"")
     }

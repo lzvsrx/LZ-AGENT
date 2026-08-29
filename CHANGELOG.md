@@ -22,3 +22,5 @@
 - Pesquisa web consentida e auditada, com bloqueio de redes privadas e limites de conteúdo.
 - Checkpoints Git limitados e restauração verificada com backup de segurança.
 - Política reproduzível por código/CLI para Unity, Unreal e Godot.
+- Reconhecimento de fala Android com permissão em tempo de execução, locale do aparelho e fallback textual.
+- Proteção automática de rotas pessoais após bootstrap da primeira conta e manifesto de proveniência.
