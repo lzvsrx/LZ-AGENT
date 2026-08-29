@@ -245,3 +245,32 @@ def test_plugin_requires_confirmation_and_declared_grant(tmp_path: Path) -> None
             json={"permission": "project.read", "granted": True, "approved": True},
         )
         assert granted.json()["grants"][0]["granted"] is True
+
+
+def test_memory_restore_requires_hash_confirmation_and_safety_backup(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        original = client.post("/api/v1/projects", json={"name": "Original"}).json()
+        backup = client.post("/api/v1/memory/backup").json()
+        temporary = client.post("/api/v1/projects", json={"name": "Temporário"}).json()
+        payload = {
+            "filename": backup["filename"],
+            "sha256": backup["sha256"],
+            "confirmation": "RESTAURAR MEMÓRIA",
+        }
+        assert client.post(
+            "/api/v1/memory/restore", json={**payload, "confirmation": "sim"}
+        ).status_code == 409
+        restored = client.post("/api/v1/memory/restore", json=payload)
+        assert restored.status_code == 200
+        assert (tmp_path / "backups" / restored.json()["safety_backup"]).is_file()
+        project_ids = {item["id"] for item in client.get("/api/v1/projects").json()}
+        assert original["id"] in project_ids
+        assert temporary["id"] not in project_ids
+        assert client.get("/api/v1/actions").json()[0]["tool"] == "memory.backup.restore"

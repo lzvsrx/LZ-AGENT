@@ -60,6 +60,12 @@ class PluginGrantRequest(BaseModel):
     approved: bool = False
 
 
+class RestoreBackupRequest(BaseModel):
+    filename: str = Field(min_length=4, max_length=255)
+    sha256: str = Field(pattern=r"^[0-9a-fA-F]{64}$")
+    confirmation: str
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     database = Database(settings.database, settings.root / "data" / "migrations")
@@ -338,6 +344,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             permission="memory.backup",
         )
         return backup
+
+    @app.post("/api/v1/memory/restore")
+    def restore_memory(request: RestoreBackupRequest) -> dict:
+        if request.confirmation != "RESTAURAR MEMÓRIA":
+            raise HTTPException(status_code=409, detail="Confirmação textual obrigatória")
+        try:
+            restored = database.restore_verified_backup(
+                settings.data_dir / "backups", request.filename, request.sha256
+            )
+        except FileNotFoundError as error:
+            raise HTTPException(status_code=404, detail="Backup não encontrado") from error
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        database.record_action(
+            "Restaurar backup verificado da memória",
+            "memory.backup.restore",
+            "succeeded",
+            parameters={"filename": request.filename, "sha256": request.sha256},
+            result={"safety_backup": restored["safety_backup"]},
+            permission="memory.restore.confirmed",
+        )
+        return restored
 
     @app.delete("/api/v1/projects/{project_id}/memory")
     def delete_project_memory(project_id: str, confirm: bool = False) -> dict:

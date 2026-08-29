@@ -164,9 +164,10 @@ persistido. A inspeção de documentos calcula metadados/hash e processa o arqui
 retê-lo por padrão.
 
 `POST /api/v1/memory/backup` cria uma cópia SQLite consistente em `data/backups`, executa
-`PRAGMA integrity_check` e devolve tamanho e SHA-256 para verificação. Backups permanecem locais e
-fora do Git; restauração deliberadamente ainda não é automática para evitar sobrescrever memória
-sem um fluxo de confirmação, checkpoint e rollback completo.
+`PRAGMA integrity_check` e devolve tamanho e SHA-256. `POST /api/v1/memory/restore` somente aceita
+um arquivo local do diretório de backups, exige o hash esperado e a confirmação textual exata
+`RESTAURAR MEMÓRIA`, valida integridade/esquema e cria outro backup de segurança antes de substituir
+o banco. Backups permanecem locais e fora do Git.
 
 Fluxo de mudança relevante:
 

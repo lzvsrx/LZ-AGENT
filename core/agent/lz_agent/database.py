@@ -294,6 +294,42 @@ class Database:
             "created_at": utc_now(),
         }
 
+    def restore_verified_backup(
+        self, destination_dir: Path, filename: str, expected_sha256: str
+    ) -> dict[str, Any]:
+        if Path(filename).name != filename or not filename.endswith(".db"):
+            raise ValueError("Nome de backup inválido")
+        source_path = destination_dir / filename
+        if not source_path.is_file():
+            raise FileNotFoundError(filename)
+        digest = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        if digest.lower() != expected_sha256.lower():
+            raise ValueError("SHA-256 do backup não confere")
+
+        required_tables = {"schema_migrations", "projects", "agent_actions"}
+        with sqlite3.connect(source_path) as source:
+            integrity = source.execute("PRAGMA integrity_check").fetchone()[0]
+            tables = {
+                row[0]
+                for row in source.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                ).fetchall()
+            }
+            if integrity != "ok" or not required_tables.issubset(tables):
+                raise ValueError("Backup inválido ou incompatível com o LZ Agent")
+            before_restore = self.create_verified_backup(destination_dir)
+            with self.connect() as target:
+                source.backup(target)
+        self.migrate()
+        return {
+            "restored": True,
+            "filename": filename,
+            "sha256": digest,
+            "integrity": integrity,
+            "safety_backup": before_restore["filename"],
+            "restored_at": utc_now(),
+        }
+
     def register_plugin(self, plugin_id: str, version: str) -> dict[str, Any]:
         now = utc_now()
         with self.connect() as connection:
