@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "project": "LZ Agent",
+  "policy": "docs/ORIGINALITY_AND_PROVENANCE.md",
+  "components": [
+    {"path": "core/agent/lz_agent", "classification": "original", "owner": "LZ Agent"},
+    {"path": "apps/web", "classification": "original", "owner": "LZ Agent"},
+    {"path": "apps/windows", "classification": "original", "owner": "LZ Agent"},
+    {"path": "apps/android", "classification": "original", "owner": "LZ Agent"},
+    {"path": "apps/linux", "classification": "original", "owner": "LZ Agent"},
+    {"path": "docs/specification", "classification": "asset", "owner": "project owner"},
+    {"path": "assets/concept-history", "classification": "asset", "owner": "unverified; release gate"},
+    {"name": "Python dependencies", "classification": "dependency", "source": "pyproject.toml"},
+    {"name": "NuGet dependencies", "classification": "dependency", "source": "apps/windows/LzAgent.Windows.csproj"},
+    {"name": "Gradle dependencies", "classification": "dependency", "source": "apps/android/app/build.gradle.kts"},
+    {"name": "Flutter dependencies", "classification": "dependency", "source": "apps/linux/pubspec.lock"},
+    {"name": "Wikipedia API", "classification": "dependency", "use": "research source; no incorporated code"}
+  ]
+}

@@ -5,6 +5,7 @@
 - senhas são derivadas com Argon2id e nunca registradas em logs;
 - tokens aleatórios são armazenados apenas como hash, expiram e podem ser revogados;
 - respostas de cadastro nunca devolvem hash ou senha;
+- após o primeiro cadastro, rotas pessoais exigem sessão e novas contas exigem autenticação;
 - voz não é credencial biométrica e o microfone exige ativação explícita;
 - o nome do dispositivo é omitido da detecção padrão.
 

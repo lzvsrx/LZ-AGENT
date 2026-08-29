@@ -326,6 +326,36 @@ def test_local_registration_login_and_logout(tmp_path: Path) -> None:
         assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
 
 
+def test_personal_routes_become_private_after_first_account(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    credentials = {"username": "owner", "password": "senha-local-com-12"}
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/api/v1/projects").status_code == 200
+        assert client.post(
+            "/api/v1/auth/register",
+            json={**credentials, "display_name": "Owner", "locale": "pt-BR"},
+        ).status_code == 201
+        assert client.get("/api/v1/projects").status_code == 401
+        token = client.post("/api/v1/auth/login", json=credentials).json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        assert client.get("/api/v1/projects", headers=headers).status_code == 200
+        assert client.post(
+            "/api/v1/auth/register",
+            json={
+                "username": "second",
+                "display_name": "Second",
+                "password": "outra-senha-local-segura",
+                "locale": "pt-BR",
+            },
+        ).status_code == 403
+
+
 def test_device_detection_is_private_by_default(tmp_path: Path) -> None:
     base = Settings.load()
     settings = Settings(

@@ -25,6 +25,11 @@ class AuthService:
         self.database = database
         self.passwords = PasswordHasher()
 
+    def has_users(self) -> bool:
+        with self.database.connect() as connection:
+            row = connection.execute("SELECT 1 FROM users LIMIT 1").fetchone()
+        return row is not None
+
     def register(
         self, username: str, display_name: str, password: str, locale: str = "pt-BR"
     ) -> dict[str, Any]:

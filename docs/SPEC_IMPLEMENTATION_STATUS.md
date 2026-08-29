@@ -24,7 +24,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Acessibilidade combinável | Parcial | semântica/foco/teclado/live regions iniciais | auditorias manuais e automáticas por plataforma e perfis persistentes |
 | Avatar 2D/3D | Inicial | identidade SVG/PNG/ICO e fallback estático | concept final, Blender, rig, estados, GLB e LOD |
 | Segurança e privacidade | Parcial | políticas, modo privado, exclusão, docs e segredos ignorados | cofre do SO, sandbox, threat tests, assinatura e SBOM |
-| Cadastro e login | Parcial funcional | conta local, Argon2id, token opaco com hash, expiração e logout | proteção obrigatória das rotas, recuperação e cofre do SO |
+| Cadastro e login | Parcial funcional | conta local, Argon2id e proteção das rotas pessoais após bootstrap | login nativo, recuperação e cofre do SO |
 | Dispositivo e sistema | Parcial funcional | tipo, SO/versão, arquitetura, CPU e nome opt-in | registro consentido entre dispositivos e matriz por hardware |
 | Microfone e fala | Parcial funcional | enumeração real de entradas e ditado web opt-in com fallback textual | STT local consistente nos três clientes e testes multilíngues |
 | Sincronização PostgreSQL | Planejado | contrato e política desativada | protocolo E2EE/autenticado, conflitos e consentimento |

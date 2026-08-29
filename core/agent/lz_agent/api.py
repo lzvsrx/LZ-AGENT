@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 import httpx
-from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, File, Header, HTTPException, Query, Request, UploadFile
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -109,6 +109,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app = FastAPI(title="LZ Agent Local API", version=__version__)
     web = settings.root / "apps" / "web"
 
+    protected_prefixes = (
+        "/api/v1/actions",
+        "/api/v1/chat",
+        "/api/v1/documents",
+        "/api/v1/memory",
+        "/api/v1/plugins",
+        "/api/v1/projects",
+        "/api/v1/research",
+        "/api/v1/suggestions",
+    )
+
+    @app.middleware("http")
+    async def protect_personal_data(request: Request, call_next):
+        if auth.has_users() and request.url.path.startswith(protected_prefixes):
+            try:
+                auth.authenticate(_raw_bearer_token(request.headers.get("authorization")))
+            except AuthenticationError as error:
+                return JSONResponse(status_code=401, content={"detail": str(error)})
+        return await call_next(request)
+
     @app.get("/api/v1/system/health")
     def health() -> dict:
         return {
@@ -121,7 +141,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.post("/api/v1/auth/register", status_code=201)
-    def register(request: RegisterRequest) -> dict:
+    def register(
+        request: RegisterRequest, authorization: Annotated[str | None, Header()] = None
+    ) -> dict:
+        if auth.has_users():
+            try:
+                auth.authenticate(_raw_bearer_token(authorization))
+            except AuthenticationError as error:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Somente uma conta autenticada pode cadastrar outro usuário",
+                ) from error
         try:
             locale = normalize_locale(request.locale)
             user = auth.register(
@@ -548,9 +578,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
 
 def _bearer_token(authorization: str | None) -> str:
+    try:
+        return _raw_bearer_token(authorization)
+    except AuthenticationError as error:
+        raise HTTPException(status_code=401, detail=str(error)) from error
+
+
+def _raw_bearer_token(authorization: str | None) -> str:
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token Bearer obrigatório")
+        raise AuthenticationError("Token Bearer obrigatório")
     token = authorization.removeprefix("Bearer ").strip()
     if not token:
-        raise HTTPException(status_code=401, detail="Token Bearer obrigatório")
+        raise AuthenticationError("Token Bearer obrigatório")
     return token

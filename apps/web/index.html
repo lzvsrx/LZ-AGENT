@@ -58,7 +58,13 @@
         <div id="response" class="response" role="status" aria-live="polite"></div>
       </section>
       <section id="tasks" class="view" hidden><h1>Tarefas</h1><div id="action-list"></div></section>
-      <section id="tools" class="view" hidden><h1>Ferramentas</h1><p>Plugins usam manifestos e permissões mínimas.</p></section>
+      <section id="tools" class="view" hidden><h1>Ferramentas</h1><p>Plugins usam manifestos e permissões mínimas.</p>
+        <form id="research-form"><h2>Pesquisa na internet</h2><label for="research-query">Assunto</label>
+          <input id="research-query" required minlength="2" maxlength="500">
+          <label class="check"><input id="research-approved" type="checkbox" required> Autorizo enviar esta consulta à Wikipedia</label>
+          <button type="submit">Pesquisar</button>
+        </form><div id="research-results" role="status" aria-live="polite"></div>
+      </section>
       <section id="memory" class="view" hidden><h1>Memória</h1><p>A memória é transparente, exportável e apagável.</p></section>
       <section id="accessibility" class="view" hidden><h1>Acessibilidade</h1><button id="motion">Reduzir movimento</button><button id="font">Aumentar texto</button></section>
       <section id="devices" class="view" hidden><h1>Dispositivos</h1><p>A sincronização é opcional e está desativada.</p></section>

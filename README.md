@@ -19,6 +19,9 @@ funciona, o que é parcial e o que ainda está planejado.
 
 A comparação testável de conversa, código, pesquisa, voz, visão, memória, ferramentas e outras
 capacidades de IA fica em [`docs/AI_CAPABILITY_ROADMAP.md`](docs/AI_CAPABILITY_ROADMAP.md).
+Autoria, dependências e assets são separados em
+[`docs/ORIGINALITY_AND_PROVENANCE.md`](docs/ORIGINALITY_AND_PROVENANCE.md) e no manifesto
+`versions/component-provenance.json`.
 
 > [!IMPORTANT]
 > O projeto está em desenvolvimento alfa. O núcleo local, a interface web e o cliente Windows já
@@ -117,8 +120,10 @@ são armazenadas: o banco guarda somente hash Argon2id com salt aleatório. Toke
 256 bits de entropia, ficam armazenados somente como SHA-256, expiram em 30 dias e podem ser
 revogados. A interface web mantém o token apenas em `sessionStorage`.
 
-Esta primeira entrega cria a identidade local; exigir autenticação em toda operação sensível será
-feito por etapas para não bloquear clientes nativos antigos sem aviso.
+Antes da primeira conta, a API permanece em modo bootstrap local. Depois dela, chat, ações, projetos,
+memória, documentos, plugins, sugestões e pesquisa exigem sessão Bearer válida. Novas contas também
+só podem ser criadas por uma sessão autenticada. Os clientes nativos ainda precisam receber telas de
+login antes de essa fase ser considerada concluída em todas as plataformas.
 
 ## Dispositivo, microfone e voz
 
