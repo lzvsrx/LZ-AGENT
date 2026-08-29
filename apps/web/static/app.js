@@ -21,3 +21,5 @@ $('#voice').addEventListener('click',()=>{if(!SpeechRecognition){$('#voice-statu
 account();
 
 $('#research-form').addEventListener('submit',async e=>{e.preventDefault();const output=$('#research-results');output.textContent='Pesquisando…';const r=await authFetch('/api/v1/research/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:$('#research-query').value,locale:document.documentElement.lang,approved:$('#research-approved').checked})});const data=await r.json();if(!r.ok){output.textContent=data.detail||'Pesquisa indisponível.';return}output.innerHTML=data.results.length?`<ol>${data.results.map(item=>`<li><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.title)}</a> <small>— ${escapeHtml(item.source)}</small></li>`).join('')}</ol>`:'<p>Nenhum resultado.</p>'});
+
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/static/service-worker.js').catch(()=>{}))}

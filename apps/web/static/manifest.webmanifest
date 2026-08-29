@@ -1,0 +1,14 @@
+{
+  "id": "/",
+  "name": "LZ Agent",
+  "short_name": "LZ Agent",
+  "description": "Agente pessoal local, acessível e auditável",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06101b",
+  "theme_color": "#07121f",
+  "categories": ["productivity", "utilities", "accessibility"],
+  "icons": [{"src": "/static/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}

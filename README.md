@@ -57,6 +57,7 @@ Agent adota o caminho oposto:
 | STT/TTS | registro de capacidades funcional | voz não verificada nunca é anunciada ou escolhida |
 | Documentos/visão | inspeção local funcional | PNG/JPEG/WebP/GIF, texto e PDF sem retenção por padrão |
 | Interface web | funcional | responsiva, teclado, foco, live region, contraste e movimento reduzido |
+| Web/PWA multiplataforma | funcional inicial | manifest instalável e shell offline sem cache de APIs/dados pessoais |
 | Windows WinUI 3 | compila e acessa a API | build x64 com 0 erros/avisos |
 | Android Compose | cliente inicial funcional | build nativo por CLI/VS Code, testes e lint; Android Studio não é necessário |
 | Linux/Flutter/Flatpak | cliente Flutter funcional inicial | análise e testes de widgets passam; pacote Flatpak pendente |

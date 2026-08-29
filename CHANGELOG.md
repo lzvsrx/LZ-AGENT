@@ -24,3 +24,4 @@
 - Política reproduzível por código/CLI para Unity, Unreal e Godot.
 - Reconhecimento de fala Android com permissão em tempo de execução, locale do aparelho e fallback textual.
 - Proteção automática de rotas pessoais após bootstrap da primeira conta e manifesto de proveniência.
+- PWA instalável, com cache restrito ao shell e sem cache das APIs pessoais.
