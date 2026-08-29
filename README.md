@@ -308,6 +308,20 @@ licenças, vulnerabilidades e rollback também são gates.
 
 Veja [`docs/RELEASE_PROCESS.md`](docs/RELEASE_PROCESS.md) e [`CHANGELOG.md`](CHANGELOG.md).
 
+## Sincronização segura com GitHub
+
+A tarefa VS Code **LZ: sincronização segura automática com GitHub** inicia ao abrir a pasta (depois
+que o VS Code autorizar tarefas automáticas). A cada mudança ela considera apenas arquivos não
+ignorados, bloqueia nomes/conteúdo com aparência de segredo e arquivos acima de 25 MB, executa Ruff,
+pytest e validação JavaScript, então cria commit e envia a branch atual. Execute uma vez sem vigiar:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\safe-github-sync.ps1
+```
+
+`.env`, bancos, backups, certificados, toolchains, caches e builds continuam deliberadamente fora do
+GitHub. Releases são produzidas por tags e CI; não se usa a pasta `build` local como fonte de release.
+
 ## Contribuição
 
 Abra uma issue com critérios de aceitação, faça uma alteração pequena, revise o diff e execute os

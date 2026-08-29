@@ -2,6 +2,15 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "LZ: sincronização segura automática com GitHub",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\safe-github-sync.ps1", "-Watch"],
+      "isBackground": true,
+      "runOptions": { "runOn": "folderOpen" },
+      "problemMatcher": []
+    },
+    {
       "label": "LZ: iniciar núcleo local",
       "type": "shell",
       "command": "${workspaceFolder}\\.venv\\Scripts\\lz-agent.exe",
