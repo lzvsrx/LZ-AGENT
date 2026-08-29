@@ -12,10 +12,16 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.400"
       - run: python -m pip install build
       - run: python -m build
       - run: dotnet build apps/windows/LzAgent.Windows.csproj -c Release -p:Platform=x64
       - run: dotnet publish apps/windows/LzAgent.Windows.csproj -c Release -p:Platform=x64 --no-build
+      - name: Package Windows alpha
+        shell: pwsh
+        run: Compress-Archive -Path apps/windows/bin/x64/Release/* -DestinationPath dist/lz-agent-${{ github.ref_name }}-windows-x64-alpha.zip
       - name: Package source and specification
         shell: pwsh
         run: Compress-Archive -Path apps,assets,config,core,data,docs,plugins,shared,versions,README.md,SECURITY.md,CHANGELOG.md -DestinationPath dist/lz-agent-${{ github.ref_name }}-source.zip
@@ -24,3 +30,37 @@ jobs:
           generate_release_notes: true
           files: |
             dist/*
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: microsoft
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+      - working-directory: apps/android
+        run: ./gradlew testDebugUnitTest lintDebug assembleDebug
+      - name: Name development APK
+        run: cp apps/android/app/build/outputs/apk/debug/app-debug.apk lz-agent-${{ github.ref_name }}-android-development.apk
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: lz-agent-${{ github.ref_name }}-android-development.apk
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.47.0"
+          channel: stable
+          cache: true
+      - working-directory: apps/linux
+        run: flutter analyze && flutter test && flutter build linux --release
+      - name: Package Linux alpha
+        run: tar -C apps/linux/build/linux/x64/release/bundle -czf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz .
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz

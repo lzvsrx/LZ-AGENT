@@ -11,3 +11,9 @@
 - Memória de projetos, lições autorizadas, exportação e exclusão confirmada.
 - Cliente Windows WinUI 3 acessível conectado à API local.
 - Validação de manifestos e permissões de plugins.
+- Cliente Android Compose compilável pelo VS Code/CLI, com lint, testes e APK alfa.
+- Cliente Linux Flutter com análise, testes e empacotamento alfa automatizado.
+- Inspeção efêmera de imagens, PDF e texto sem retenção por padrão.
+- Sugestões rastreáveis, decisões do usuário e backup SQLite com integridade/SHA-256.
+- Grants de plugins persistentes, declarados e sujeitos a confirmação explícita.
+- Matriz auditável de implementação contra o Documento Mestre 2026.
