@@ -1,5 +1,6 @@
 .env
 .venv/
+.toolchains/
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -13,8 +14,11 @@ bin/
 obj/
 .spec-extract/
 .idea/
-.vscode/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
 local.properties
 *.keystore
 *.pfx
-

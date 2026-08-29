@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Annotated
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -11,6 +12,7 @@ from . import __version__
 from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
 from .config import Settings
 from .database import Database
+from .documents import DocumentError, inspect_document
 from .localization import Translator, locale_fallbacks, normalize_locale, writing_direction
 from .plugins import PluginRegistry
 from .providers import LocalFallbackProvider
@@ -78,6 +80,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "plugins": plugins.discover(),
             "policy": "Nenhum plugin recebe permissão ou execução apenas por estar instalado.",
         }
+
+    @app.post("/api/v1/documents/inspect")
+    async def inspect(file: Annotated[UploadFile, File()]) -> dict:
+        content = await file.read(25 * 1024 * 1024 + 1)
+        try:
+            metadata = inspect_document(
+                file.filename or "documento",
+                file.content_type or "application/octet-stream",
+                content,
+            )
+        except DocumentError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        database.record_action(
+            "Inspecionar documento sem retenção",
+            "vision.documents.inspect",
+            "succeeded",
+            parameters={
+                "filename": metadata["filename"],
+                "media_type": metadata["media_type"],
+                "sha256": metadata["sha256"],
+            },
+            result={"kind": metadata["kind"], "retained": False},
+            permission="documents.read.selected",
+        )
+        return metadata
 
     @app.get("/api/v1/config")
     def config() -> dict:

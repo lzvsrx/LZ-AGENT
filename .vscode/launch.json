@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "LZ Agent: núcleo local",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "lz_agent.main",
+      "console": "integratedTerminal",
+      "envFile": "${workspaceFolder}/.env"
+    },
+    {
+      "name": "LZ Agent: Linux Flutter",
+      "type": "dart",
+      "request": "launch",
+      "program": "apps/linux/lib/main.dart",
+      "cwd": "${workspaceFolder}/apps/linux"
+    }
+  ]
+}

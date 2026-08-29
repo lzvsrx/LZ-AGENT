@@ -25,6 +25,16 @@ $ffmpeg = if ($ffmpegExecutable) { (& $ffmpegExecutable -version 2>&1 | Select-O
 $ffmpegVersion = if ($ffmpeg -match 'ffmpeg version ([^ ]+)') { $Matches[1] } else { 'missing' }
 Add-Check 'ffmpeg' $baseline.versions.ffmpeg $ffmpegVersion $false
 
+$jdk = Get-ChildItem -LiteralPath 'C:\Program Files\Microsoft' -Filter java.exe -Recurse -ErrorAction SilentlyContinue | Where-Object FullName -Match 'jdk-17' | Select-Object -First 1
+$javaLine = if ($jdk) { (& $jdk.FullName --version | Select-Object -First 1) } else { 'missing' }
+$javaVersion = if ($javaLine -match 'openjdk ([^ ]+)') { $Matches[1] } else { 'missing' }
+Add-Check 'jdk' $baseline.versions.jdk $javaVersion $false
+
+$rustc = 'C:\Users\valen\.cargo\bin\rustc.exe'
+$rustLine = if (Test-Path -LiteralPath $rustc) { & $rustc --version } else { 'missing' }
+$rustVersion = if ($rustLine -match 'rustc ([^ ]+)') { $Matches[1] } else { 'missing' }
+Add-Check 'rust' $baseline.versions.rust $rustVersion $false
+
 $results | Format-Table -AutoSize
 $failed = @($results | Where-Object { -not $_.Matches -and ($_.Required -or $Strict) })
 if ($failed.Count -gt 0) { throw "Stack divergiu do baseline em $($failed.Count) item(ns)." }

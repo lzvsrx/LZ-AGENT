@@ -1,0 +1,47 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "LZ: iniciar núcleo local",
+      "type": "shell",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\lz-agent.exe",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: preparar SDK",
+      "type": "shell",
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\scripts\\setup-android.ps1"]
+    },
+    {
+      "label": "Android: verificar",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["testDebugUnitTest", "lintDebug", "assembleDebug"],
+      "options": { "cwd": "${workspaceFolder}\\apps\\android" },
+      "problemMatcher": ["$gradle"]
+    },
+    {
+      "label": "Android: listar dispositivos",
+      "type": "shell",
+      "command": "adb",
+      "args": ["devices"]
+    },
+    {
+      "label": "Android: encaminhar API local (adb reverse)",
+      "type": "shell",
+      "command": "adb",
+      "args": ["reverse", "tcp:8765", "tcp:8765"]
+    },
+    {
+      "label": "Android: compilar e instalar debug",
+      "type": "shell",
+      "command": ".\\gradlew.bat",
+      "args": ["installDebug"],
+      "options": { "cwd": "${workspaceFolder}\\apps\\android" },
+      "dependsOn": "Android: encaminhar API local (adb reverse)",
+      "problemMatcher": ["$gradle"]
+    }
+  ]
+}

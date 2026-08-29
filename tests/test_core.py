@@ -1,3 +1,4 @@
+from io import BytesIO
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -12,6 +13,7 @@ from lz_agent.localization import (
 )
 from lz_agent.plugins import PluginRegistry, PluginValidationError, load_manifest
 from lz_agent.policies import PolicyEngine, Risk
+from PIL import Image
 
 
 def test_health_and_private_session(tmp_path: Path) -> None:
@@ -134,3 +136,28 @@ def test_invalid_plugin_is_rejected(tmp_path: Path) -> None:
         pass
     else:
         raise AssertionError("Manifesto inválido deveria ser rejeitado")
+
+
+def test_image_inspection_is_ephemeral_and_audited(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    image = BytesIO()
+    Image.new("RGB", (32, 24), "cyan").save(image, format="PNG")
+    with TestClient(create_app(settings)) as client:
+        response = client.post(
+            "/api/v1/documents/inspect",
+            files={"file": ("teste.png", image.getvalue(), "image/png")},
+        )
+        assert response.status_code == 200
+        metadata = response.json()
+        assert (metadata["width"], metadata["height"], metadata["retained"]) == (
+            32,
+            24,
+            False,
+        )
+        assert client.get("/api/v1/actions").json()[0]["tool"] == "vision.documents.inspect"
