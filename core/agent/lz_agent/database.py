@@ -190,12 +190,82 @@ class Database:
                 ).fetchall()
         return [dict(row) for row in rows]
 
+    def create_suggestion(
+        self,
+        project_id: str,
+        title: str,
+        description: str,
+        priority: str,
+        justification: str,
+        *,
+        impact: str = "",
+        source_lesson_id: str | None = None,
+    ) -> dict[str, Any]:
+        self.get_project(project_id)
+        if source_lesson_id:
+            lesson = self.get_lesson(source_lesson_id)
+            if lesson["project_id"] != project_id:
+                raise ValueError("A lição de origem pertence a outro projeto")
+        suggestion_id = str(uuid.uuid4())
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO suggestions
+                (id, project_id, title, description, priority, impact, justification,
+                 source_lesson_id, decision, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?)""",
+                (
+                    suggestion_id,
+                    project_id,
+                    title,
+                    description,
+                    priority,
+                    impact,
+                    justification,
+                    source_lesson_id,
+                    utc_now(),
+                ),
+            )
+        return self.get_suggestion(suggestion_id)
+
+    def get_suggestion(self, suggestion_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM suggestions WHERE id = ?", (suggestion_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(suggestion_id)
+        return dict(row)
+
+    def list_suggestions(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            if project_id:
+                rows = connection.execute(
+                    "SELECT * FROM suggestions WHERE project_id = ? ORDER BY created_at DESC",
+                    (project_id,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT * FROM suggestions ORDER BY created_at DESC"
+                ).fetchall()
+        return [dict(row) for row in rows]
+
+    def decide_suggestion(self, suggestion_id: str, decision: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                "UPDATE suggestions SET decision = ? WHERE id = ?",
+                (decision, suggestion_id),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(suggestion_id)
+        return self.get_suggestion(suggestion_id)
+
     def export_memory(self) -> dict[str, Any]:
         return {
             "schema_version": 1,
             "exported_at": utc_now(),
             "projects": self.list_projects(),
             "lessons_learned": self.list_lessons(),
+            "suggestions": self.list_suggestions(),
             "actions": self.list_actions(limit=500),
         }
 

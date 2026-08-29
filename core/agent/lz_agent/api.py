@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
@@ -34,6 +34,19 @@ class LessonRequest(BaseModel):
     solution: str = Field(min_length=1, max_length=20_000)
     evidence: str = Field(default="", max_length=20_000)
     confidence: float = Field(ge=0, le=1)
+
+
+class SuggestionRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    description: str = Field(min_length=1, max_length=20_000)
+    priority: Literal["low", "medium", "high", "critical"] = "medium"
+    impact: str = Field(default="", max_length=10_000)
+    justification: str = Field(min_length=1, max_length=20_000)
+    source_lesson_id: str | None = None
+
+
+class SuggestionDecisionRequest(BaseModel):
+    decision: Literal["accepted", "rejected", "deferred"]
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -182,6 +195,58 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             permission="learning.write",
         )
         return lesson
+
+    @app.get("/api/v1/projects/{project_id}/suggestions")
+    def suggestions(project_id: str) -> list[dict]:
+        try:
+            database.get_project(project_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        return database.list_suggestions(project_id)
+
+    @app.post("/api/v1/projects/{project_id}/suggestions", status_code=201)
+    def create_suggestion(project_id: str, request: SuggestionRequest) -> dict:
+        try:
+            suggestion = database.create_suggestion(
+                project_id,
+                request.title,
+                request.description,
+                request.priority,
+                request.justification,
+                impact=request.impact,
+                source_lesson_id=request.source_lesson_id,
+            )
+        except KeyError as error:
+            raise HTTPException(
+                status_code=404, detail="Projeto ou lição não encontrado"
+            ) from error
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        database.record_action(
+            "Criar sugestão rastreável",
+            "learning.suggestions.create",
+            "succeeded",
+            parameters={"suggestion_id": suggestion["id"]},
+            project_id=project_id,
+            permission="learning.suggest",
+        )
+        return suggestion
+
+    @app.patch("/api/v1/suggestions/{suggestion_id}")
+    def decide_suggestion(suggestion_id: str, request: SuggestionDecisionRequest) -> dict:
+        try:
+            suggestion = database.decide_suggestion(suggestion_id, request.decision)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Sugestão não encontrada") from error
+        database.record_action(
+            "Registrar decisão sobre sugestão",
+            "learning.suggestions.decide",
+            "succeeded",
+            parameters={"suggestion_id": suggestion_id, "decision": request.decision},
+            project_id=suggestion["project_id"],
+            permission="learning.decide",
+        )
+        return suggestion
 
     @app.get("/api/v1/memory/export")
     def export_memory() -> dict:

@@ -13,6 +13,10 @@ O documento é uma especificação de produto; o código e os testes versionados
 da implementação. Conceitos históricos que contrariem a especificação atual, como dependência de
 Docker, permanecem apenas no arquivo visual e não fazem parte da arquitetura.
 
+O acompanhamento requisito por requisito fica em
+[`docs/SPEC_IMPLEMENTATION_STATUS.md`](docs/SPEC_IMPLEMENTATION_STATUS.md); a matriz separa o que
+funciona, o que é parcial e o que ainda está planejado.
+
 > [!IMPORTANT]
 > O projeto está em desenvolvimento alfa. O núcleo local, a interface web e o cliente Windows já
 > possuem partes executáveis e testadas; Android e Linux possuem clientes iniciais, enquanto voz completa, visão semântica, sincronização,

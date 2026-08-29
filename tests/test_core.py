@@ -161,3 +161,39 @@ def test_image_inspection_is_ephemeral_and_audited(tmp_path: Path) -> None:
             False,
         )
         assert client.get("/api/v1/actions").json()[0]["tool"] == "vision.documents.inspect"
+
+
+def test_suggestion_has_evidence_and_user_decision(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        project = client.post("/api/v1/projects", json={"name": "Projeto"}).json()
+        lesson = client.post(
+            f"/api/v1/projects/{project['id']}/lessons",
+            json={"problem": "Build lento", "solution": "Usar cache", "confidence": 0.8},
+        ).json()
+        created = client.post(
+            f"/api/v1/projects/{project['id']}/suggestions",
+            json={
+                "title": "Ativar cache",
+                "description": "Reutilizar saídas verificadas.",
+                "priority": "medium",
+                "justification": "A lição anterior registrou ganho reproduzível.",
+                "source_lesson_id": lesson["id"],
+            },
+        )
+        assert created.status_code == 201
+        suggestion = created.json()
+        assert suggestion["decision"] == "pending"
+        decided = client.patch(
+            f"/api/v1/suggestions/{suggestion['id']}", json={"decision": "accepted"}
+        )
+        assert decided.json()["decision"] == "accepted"
+        assert client.get("/api/v1/memory/export").json()["suggestions"][0][
+            "source_lesson_id"
+        ] == lesson["id"]
