@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import sqlite3
 import uuid
@@ -273,6 +274,25 @@ class Database:
         with self.connect() as connection:
             cursor = connection.execute("DELETE FROM projects WHERE id = ?", (project_id,))
         return cursor.rowcount > 0
+
+    def create_verified_backup(self, destination_dir: Path) -> dict[str, Any]:
+        destination_dir.mkdir(parents=True, exist_ok=True)
+        stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+        destination = destination_dir / f"lz-agent-{stamp}-{uuid.uuid4().hex[:8]}.db"
+        with self.connect() as source, sqlite3.connect(destination) as target:
+            source.backup(target)
+            integrity = target.execute("PRAGMA integrity_check").fetchone()[0]
+        if integrity != "ok":
+            destination.unlink(missing_ok=True)
+            raise RuntimeError(f"Backup SQLite inválido: {integrity}")
+        content = destination.read_bytes()
+        return {
+            "filename": destination.name,
+            "size_bytes": len(content),
+            "sha256": hashlib.sha256(content).hexdigest(),
+            "integrity": integrity,
+            "created_at": utc_now(),
+        }
 
     @staticmethod
     def _decode(row: sqlite3.Row) -> dict[str, Any]:

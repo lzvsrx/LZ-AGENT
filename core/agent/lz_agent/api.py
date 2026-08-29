@@ -252,6 +252,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def export_memory() -> dict:
         return database.export_memory()
 
+    @app.post("/api/v1/memory/backup", status_code=201)
+    def backup_memory() -> dict:
+        backup = database.create_verified_backup(settings.data_dir / "backups")
+        database.record_action(
+            "Criar backup verificado da memória",
+            "memory.backup.create",
+            "succeeded",
+            parameters={"filename": backup["filename"]},
+            result={"sha256": backup["sha256"], "integrity": backup["integrity"]},
+            permission="memory.backup",
+        )
+        return backup
+
     @app.delete("/api/v1/projects/{project_id}/memory")
     def delete_project_memory(project_id: str, confirm: bool = False) -> dict:
         if not confirm:

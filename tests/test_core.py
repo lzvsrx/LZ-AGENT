@@ -197,3 +197,21 @@ def test_suggestion_has_evidence_and_user_decision(tmp_path: Path) -> None:
         assert client.get("/api/v1/memory/export").json()["suggestions"][0][
             "source_lesson_id"
         ] == lesson["id"]
+
+
+def test_memory_backup_is_created_and_verified(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        client.post("/api/v1/projects", json={"name": "Backup"})
+        response = client.post("/api/v1/memory/backup")
+        assert response.status_code == 201
+        backup = response.json()
+        assert backup["integrity"] == "ok"
+        assert len(backup["sha256"]) == 64
+        assert (tmp_path / "backups" / backup["filename"]).is_file()

@@ -163,6 +163,11 @@ artefatos, preferências, fontes, checkpoints e versões técnicas. Conteúdo de
 persistido. A inspeção de documentos calcula metadados/hash e processa o arquivo em memória sem
 retê-lo por padrão.
 
+`POST /api/v1/memory/backup` cria uma cópia SQLite consistente em `data/backups`, executa
+`PRAGMA integrity_check` e devolve tamanho e SHA-256 para verificação. Backups permanecem locais e
+fora do Git; restauração deliberadamente ainda não é automática para evitar sobrescrever memória
+sem um fluxo de confirmação, checkpoint e rollback completo.
+
 Fluxo de mudança relevante:
 
 ```text

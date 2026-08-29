@@ -10,7 +10,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Android Compose | Parcial funcional | build CLI/VS Code, APK, lint e testes | UI adaptativa, instrumentação TalkBack/Switch Access e release assinada |
 | Linux Flutter | Parcial funcional | análise e testes de widget | build em Linux, Portals, Flatpak e matriz Wayland/X11 |
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
-| Memória por projeto | Parcial funcional | projetos, lições, exportação e exclusão confirmada | edição, busca, retenção e backup verificado |
+| Memória por projeto | Parcial funcional | projetos, lições, sugestões, exportação, exclusão e backup SQLite verificado | edição, busca, retenção e restauração segura |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
 | Checkpoint/diff/rollback | Estrutura apenas | tabelas e política declaradas | serviço transacional e testes de restauração |
 | Provedores de IA | Estrutura apenas | interface/fallback local e configuração versionada | adaptadores autenticados, roteamento e métricas por ação |
