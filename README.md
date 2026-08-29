@@ -181,7 +181,9 @@ provedor externo; `.env`, bancos, backups, caches, certificados e ambientes virt
 
 Cada plugin possui ID, versão, descrição, comandos, permissões e entrypoint. O registro rejeita
 manifestos incompletos, IDs inválidos e permissões/comandos duplicados. Instalação não concede
-permissão nem execução. Os pacotes iniciais são Produtividade, Desenvolvedor, Mídia e Blender.
+permissão nem execução. Habilitação e grants são persistidos separadamente, exigem confirmação para
+concessão e rejeitam capacidades não declaradas no manifesto. Os pacotes iniciais são Produtividade,
+Desenvolvedor, Mídia e Blender.
 
 O próximo nível inclui grants persistentes, sandbox, entrada/saída validada, timeout, cancelamento e
 registro de toda execução no Action Ledger.

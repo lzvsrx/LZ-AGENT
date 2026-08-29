@@ -215,3 +215,33 @@ def test_memory_backup_is_created_and_verified(tmp_path: Path) -> None:
         assert backup["integrity"] == "ok"
         assert len(backup["sha256"]) == 64
         assert (tmp_path / "backups" / backup["filename"]).is_file()
+
+
+def test_plugin_requires_confirmation_and_declared_grant(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    plugin_id = "dev.lzagent.developer"
+    with TestClient(create_app(settings)) as client:
+        assert client.patch(
+            f"/api/v1/plugins/{plugin_id}/state", json={"enabled": True}
+        ).status_code == 409
+        enabled = client.patch(
+            f"/api/v1/plugins/{plugin_id}/state",
+            json={"enabled": True, "approved": True},
+        )
+        assert enabled.json()["enabled"] is True
+        invalid = client.put(
+            f"/api/v1/plugins/{plugin_id}/grants",
+            json={"permission": "system.admin", "granted": True, "approved": True},
+        )
+        assert invalid.status_code == 400
+        granted = client.put(
+            f"/api/v1/plugins/{plugin_id}/grants",
+            json={"permission": "project.read", "granted": True, "approved": True},
+        )
+        assert granted.json()["grants"][0]["granted"] is True

@@ -17,7 +17,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Texto e idiomas globais | Infraestrutura parcial | BCP 47, fallback, RTL, `pt-BR` e `en` | catálogos revisados por falantes e testes de layout/formato |
 | STT/TTS | Detecção parcial | registro impede anunciar voz não verificada | engines locais/sistema, consentimento cloud e testes por locale |
 | Imagens/documentos | Parcial funcional | metadados de imagem/PDF/texto sem retenção | OCR, descrição semântica autorizada e câmera |
-| Plugins | Descoberta funcional | esquema, validação e quatro manifestos | runtime isolado, grants persistentes, timeout e contratos I/O |
+| Plugins | Controle parcial funcional | esquema, quatro manifestos, estado e grants persistentes com confirmação | runtime isolado, timeout e contratos I/O |
 | Perfis Lite/Standard/Pro | Detecção parcial | diagnóstico básico de hardware | roteamento de capacidades e testes em hardware-alvo |
 | Acessibilidade combinável | Parcial | semântica/foco/teclado/live regions iniciais | auditorias manuais e automáticas por plataforma e perfis persistentes |
 | Avatar 2D/3D | Inicial | identidade SVG/PNG/ICO e fallback estático | concept final, Blender, rig, estados, GLB e LOD |

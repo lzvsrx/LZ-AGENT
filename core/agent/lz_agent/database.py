@@ -294,6 +294,59 @@ class Database:
             "created_at": utc_now(),
         }
 
+    def register_plugin(self, plugin_id: str, version: str) -> dict[str, Any]:
+        now = utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO plugin_states(plugin_id, version, enabled, installed_at, updated_at)
+                VALUES (?, ?, 0, ?, ?)
+                ON CONFLICT(plugin_id) DO UPDATE SET version=excluded.version,
+                updated_at=excluded.updated_at""",
+                (plugin_id, version, now, now),
+            )
+        return self.get_plugin_state(plugin_id)
+
+    def get_plugin_state(self, plugin_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM plugin_states WHERE plugin_id = ?", (plugin_id,)
+            ).fetchone()
+            grants = connection.execute(
+                "SELECT permission, granted, granted_at FROM plugin_grants WHERE plugin_id = ?",
+                (plugin_id,),
+            ).fetchall()
+        if row is None:
+            raise KeyError(plugin_id)
+        value = dict(row)
+        value["enabled"] = bool(value["enabled"])
+        value["grants"] = [
+            {**dict(grant), "granted": bool(grant["granted"])} for grant in grants
+        ]
+        return value
+
+    def set_plugin_enabled(self, plugin_id: str, enabled: bool) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                "UPDATE plugin_states SET enabled = ?, updated_at = ? WHERE plugin_id = ?",
+                (int(enabled), utc_now(), plugin_id),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(plugin_id)
+        return self.get_plugin_state(plugin_id)
+
+    def set_plugin_grant(self, plugin_id: str, permission: str, granted: bool) -> dict[str, Any]:
+        self.get_plugin_state(plugin_id)
+        now = utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO plugin_grants(plugin_id, permission, granted, granted_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(plugin_id, permission) DO UPDATE SET granted=excluded.granted,
+                granted_at=excluded.granted_at""",
+                (plugin_id, permission, int(granted), now if granted else None),
+            )
+        return self.get_plugin_state(plugin_id)
+
     @staticmethod
     def _decode(row: sqlite3.Row) -> dict[str, Any]:
         value = dict(row)

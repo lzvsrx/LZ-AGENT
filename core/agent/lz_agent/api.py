@@ -49,6 +49,17 @@ class SuggestionDecisionRequest(BaseModel):
     decision: Literal["accepted", "rejected", "deferred"]
 
 
+class PluginStateRequest(BaseModel):
+    enabled: bool
+    approved: bool = False
+
+
+class PluginGrantRequest(BaseModel):
+    permission: str = Field(min_length=3, max_length=200)
+    granted: bool
+    approved: bool = False
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     database = Database(settings.database, settings.root / "data" / "migrations")
@@ -93,6 +104,69 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "plugins": plugins.discover(),
             "policy": "Nenhum plugin recebe permissão ou execução apenas por estar instalado.",
         }
+
+    @app.get("/api/v1/plugins/{plugin_id}/state")
+    def plugin_state(plugin_id: str) -> dict:
+        try:
+            manifest = plugins.get(plugin_id)
+            try:
+                return database.get_plugin_state(plugin_id)
+            except KeyError:
+                return database.register_plugin(plugin_id, manifest.version)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Plugin não encontrado") from error
+
+    @app.patch("/api/v1/plugins/{plugin_id}/state")
+    def change_plugin_state(plugin_id: str, request: PluginStateRequest) -> dict:
+        if request.enabled and not request.approved:
+            raise HTTPException(status_code=409, detail="Confirmação explícita obrigatória")
+        try:
+            manifest = plugins.get(plugin_id)
+            try:
+                database.get_plugin_state(plugin_id)
+            except KeyError:
+                database.register_plugin(plugin_id, manifest.version)
+            state = database.set_plugin_enabled(plugin_id, request.enabled)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Plugin não encontrado") from error
+        database.record_action(
+            "Alterar estado de plugin",
+            "plugins.state.update",
+            "succeeded",
+            parameters={"plugin_id": plugin_id, "enabled": request.enabled},
+            permission="plugins.manage.confirmed" if request.approved else "plugins.manage",
+        )
+        return state
+
+    @app.put("/api/v1/plugins/{plugin_id}/grants")
+    def change_plugin_grant(plugin_id: str, request: PluginGrantRequest) -> dict:
+        if request.granted and not request.approved:
+            raise HTTPException(status_code=409, detail="Confirmação explícita obrigatória")
+        try:
+            manifest = plugins.get(plugin_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Plugin não encontrado") from error
+        if request.permission not in manifest.permissions:
+            raise HTTPException(status_code=400, detail="Permissão não declarada pelo plugin")
+        try:
+            database.get_plugin_state(plugin_id)
+        except KeyError:
+            database.register_plugin(plugin_id, manifest.version)
+        state = database.set_plugin_grant(plugin_id, request.permission, request.granted)
+        database.record_action(
+            "Alterar permissão de plugin",
+            "plugins.grants.update",
+            "succeeded",
+            parameters={
+                "plugin_id": plugin_id,
+                "permission": request.permission,
+                "granted": request.granted,
+            },
+            permission=(
+                "plugins.permissions.confirmed" if request.approved else "plugins.permissions"
+            ),
+        )
+        return state
 
     @app.post("/api/v1/documents/inspect")
     async def inspect(file: Annotated[UploadFile, File()]) -> dict:
