@@ -1,6 +1,8 @@
 .env
 .venv/
 .toolchains/
+.gradle/
+**/.gradle/
 __pycache__/
 *.py[cod]
 .pytest_cache/
