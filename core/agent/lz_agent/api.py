@@ -8,9 +8,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import __version__
+from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
 from .config import Settings
 from .database import Database
 from .localization import Translator, locale_fallbacks, normalize_locale, writing_direction
+from .plugins import PluginRegistry
 from .providers import LocalFallbackProvider
 from .service import AgentService
 
@@ -37,7 +39,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     database = Database(settings.database, settings.root / "data" / "migrations")
     database.migrate()
     service = AgentService(database, LocalFallbackProvider())
+    audio_capabilities = AudioCapabilityRegistry()
     translator = Translator(settings.root / "shared" / "localization")
+    plugins = PluginRegistry(settings.root / "plugins")
     app = FastAPI(title="LZ Agent Local API", version=__version__)
     web = settings.root / "apps" / "web"
 
@@ -50,6 +54,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "database": "connected",
             "provider": "local",
             "stats": database.stats(),
+        }
+
+    @app.get("/api/v1/system/capabilities")
+    def capabilities() -> dict:
+        return runtime_diagnostics(settings.database)
+
+    @app.get("/api/v1/audio/capabilities")
+    def audio(locale: str | None = None) -> dict:
+        try:
+            rows = audio_capabilities.list(locale)
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        return {
+            "capabilities": rows,
+            "fallback": "text",
+            "notice": "Apenas idiomas e vozes verificados são anunciados como disponíveis.",
+        }
+
+    @app.get("/api/v1/plugins")
+    def list_plugins() -> dict:
+        return {
+            "plugins": plugins.discover(),
+            "policy": "Nenhum plugin recebe permissão ou execução apenas por estar instalado.",
         }
 
     @app.get("/api/v1/config")

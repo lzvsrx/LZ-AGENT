@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Page x:Class="LzAgent_Windows.MainPage" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d">
+    <Grid>
+        <NavigationView x:Name="Navigation" IsBackButtonVisible="Collapsed" IsSettingsVisible="True" PaneDisplayMode="Auto" SelectionChanged="Navigation_SelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Home" Icon="Home" Tag="home" />
+                <NavigationViewItem Content="Tarefas" Icon="AllApps" Tag="tasks" />
+                <NavigationViewItem Content="Ferramentas" Icon="Repair" Tag="tools" />
+                <NavigationViewItem Content="Memória" Icon="Library" Tag="memory" />
+                <NavigationViewItem Content="Acessibilidade" Icon="EaseOfAccess" Tag="accessibility" />
+                <NavigationViewItem Content="Dispositivos" Icon="Devices" Tag="devices" />
+                <NavigationViewItem Content="Desenvolvedor" Icon="Code" Tag="developer" />
+            </NavigationView.MenuItems>
+            <ScrollViewer>
+                <Grid Padding="32" MaxWidth="900" HorizontalAlignment="Stretch">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <StackPanel Spacing="8">
+                        <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Como posso ajudar?" />
+                        <TextBlock x:Name="AgentState" AutomationProperties.LiveSetting="Polite" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Text="Estado: pronto" />
+                        <TextBlock MaxWidth="680" HorizontalAlignment="Left" Text="O núcleo local mantém memória auditável, permissões mínimas e modo privado." TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBox x:Name="MessageInput" Grid.Row="1" Margin="0,24,0,0" AcceptsReturn="True" AutomationProperties.HelpText="Digite a tarefa que o LZ Agent deve analisar" AutomationProperties.Name="Sua solicitação" Header="Sua solicitação" MinHeight="120" PlaceholderText="Digite uma tarefa…" TextWrapping="Wrap" />
+                    <StackPanel Grid.Row="2" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
+                        <Button x:Name="SendButton" AutomationProperties.Name="Enviar solicitação" Click="SendButton_Click" Content="Enviar" Style="{StaticResource AccentButtonStyle}" />
+                        <CheckBox x:Name="PrivateMode" AutomationProperties.HelpText="Quando ativo, o conteúdo desta conversa não é salvo" Content="Sessão privada" />
+                    </StackPanel>
+                    <Border Grid.Row="3" Margin="0,20,0,0" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8">
+                        <TextBlock x:Name="ResponseText" AutomationProperties.LiveSetting="Polite" IsTextSelectionEnabled="True" Text="A resposta acessível aparecerá aqui." TextWrapping="Wrap" />
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </NavigationView>
+    </Grid>
+</Page>

@@ -2,8 +2,15 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from lz_agent.api import create_app
+from lz_agent.capabilities import AudioCapabilityRegistry
 from lz_agent.config import Settings
-from lz_agent.localization import locale_fallbacks, normalize_locale, writing_direction
+from lz_agent.localization import (
+    AudioCapability,
+    locale_fallbacks,
+    normalize_locale,
+    writing_direction,
+)
+from lz_agent.plugins import PluginRegistry, PluginValidationError, load_manifest
 from lz_agent.policies import PolicyEngine, Risk
 
 
@@ -78,3 +85,52 @@ def test_project_memory_export_and_confirmed_deletion(tmp_path: Path) -> None:
         assert denied.status_code == 409
         deleted = client.delete(f"/api/v1/projects/{project['id']}/memory?confirm=true")
         assert deleted.status_code == 200
+
+
+def test_audio_registry_never_selects_unverified_voice() -> None:
+    registry = AudioCapabilityRegistry()
+    registry.register(
+        AudioCapability(
+            locale="pt_br",
+            stt_available=True,
+            tts_available=True,
+            voices=("Voz de teste",),
+            verified=False,
+        )
+    )
+    assert registry.list("pt-BR")[0]["locale"] == "pt-BR"
+    assert registry.best("pt-BR", "tts") is None
+    registry.register(
+        AudioCapability(
+            locale="en",
+            stt_available=True,
+            tts_available=True,
+            voices=("Test voice",),
+            verified=True,
+        )
+    )
+    assert registry.best("en", "stt") is not None
+
+
+def test_all_versioned_plugin_manifests_are_valid() -> None:
+    root = Settings.load().root
+    registry = PluginRegistry(root / "plugins")
+    manifests = registry.discover()
+    assert {item["name"] for item in manifests} == {
+        "Blender",
+        "Desenvolvedor",
+        "Mídia",
+        "Produtividade",
+    }
+    assert all(item["permissions"] for item in manifests)
+
+
+def test_invalid_plugin_is_rejected(tmp_path: Path) -> None:
+    manifest = tmp_path / "plugin.json"
+    manifest.write_text('{"schema_version": 1, "id": "INVALID"}', encoding="utf-8")
+    try:
+        load_manifest(manifest)
+    except PluginValidationError:
+        pass
+    else:
+        raise AssertionError("Manifesto inválido deveria ser rejeitado")

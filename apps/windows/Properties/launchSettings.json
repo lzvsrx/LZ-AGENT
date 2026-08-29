@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "LzAgent.Windows (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "LzAgent.Windows (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

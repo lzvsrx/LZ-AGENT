@@ -9,6 +9,8 @@ data/*.db*
 data/backups/*
 dist/
 build/
+bin/
+obj/
 .spec-extract/
 .idea/
 .vscode/

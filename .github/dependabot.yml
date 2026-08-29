@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule: {interval: weekly}
+    groups:
+      python-runtime: {patterns: ["*"]}
+  - package-ecosystem: nuget
+    directory: /apps/windows
+    schedule: {interval: weekly}
+    groups:
+      windows-app-sdk: {patterns: ["Microsoft.Windows*"]}
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: {interval: weekly}
+
