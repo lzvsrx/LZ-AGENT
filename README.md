@@ -27,8 +27,8 @@ um provedor externo. Sem chave, o agente permanece funcional em modo local demon
 - `apps`: clientes de plataforma.
 - `plugins`: capacidades isoladas por manifesto e permissão.
 - `assets`: marca, avatar e arquivo visual histórico.
+- `shared/localization`: idiomas BCP 47, variantes regionais e contratos de texto/áudio.
 - `docs`: arquitetura, segurança, acessibilidade e matriz de suporte.
 - `versions`: baseline técnico reproduzível.
 
 Consulte [CONTRIBUTING.md](CONTRIBUTING.md) e [SECURITY.md](SECURITY.md) antes de contribuir.
-

@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "default_locale": "pt-BR",
+  "fallback_locale": "en",
+  "policy": {
+    "standard": "BCP 47",
+    "preserve_regional_variants": true,
+    "allow_user_override": true,
+    "require_native_review_before_verified": true,
+    "never_claim_unverified_audio_support": true
+  },
+  "verified_locales": ["pt-BR", "en"],
+  "planned_coverage": "all-valid-bcp47-locales",
+  "writing_directions": {"default": "ltr", "rtl_scripts": ["Arab", "Hebr", "Adlm", "Nkoo", "Rohg", "Syrc", "Thaa"]}
+}
+

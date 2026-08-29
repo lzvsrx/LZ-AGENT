@@ -1,0 +1,16 @@
+{
+  "app.name": "LZ Agent",
+  "app.tagline": "Your intelligent personal agent",
+  "state.idle": "Ready",
+  "state.listening": "Listening",
+  "state.thinking": "Thinking",
+  "state.speaking": "Speaking",
+  "state.error": "Error",
+  "home.prompt": "How can I help?",
+  "home.input_label": "Your request",
+  "home.send": "Send",
+  "privacy.private_session": "Private session",
+  "audio.voice_unavailable": "No validated voice is available for this language on this device.",
+  "audio.transcription_unavailable": "Transcription is unavailable for this language on this device."
+}
+

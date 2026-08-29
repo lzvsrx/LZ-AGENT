@@ -2,6 +2,16 @@
   "$schema": "../shared/schemas/agent-config.schema.json",
   "schema_version": 1,
   "agent": {"name": "LZ Agent", "language": "pt-BR", "autonomy_level": 1},
+  "localization": {
+    "standard": "BCP 47", "default_locale": "pt-BR", "fallback_locale": "en",
+    "auto_detect": true, "user_override": true, "rtl": true
+  },
+  "audio": {
+    "stt": {"enabled": true, "provider": "auto", "local_preferred": true},
+    "tts": {"enabled": true, "provider": "system", "voice": "auto", "rate": 1.0},
+    "cloud_requires_explicit_consent": true,
+    "clone_voice_requires_verified_consent": true
+  },
   "providers": {
     "general": {"provider": "openai", "model": "gpt-5.6-sol", "reasoning": "medium"},
     "coding": {"provider": "openai", "model": "gpt-5.3-codex", "reasoning": "high"}
@@ -25,4 +35,3 @@
   },
   "avatar": {"enabled": true, "render_mode": "auto", "fallback": "2d-static"}
 }
-

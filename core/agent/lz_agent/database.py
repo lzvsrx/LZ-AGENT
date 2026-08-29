@@ -120,6 +120,90 @@ class Database:
                 "artifacts": connection.execute("SELECT COUNT(*) FROM artifacts").fetchone()[0],
             }
 
+    def create_project(self, name: str, objective: str = "") -> dict[str, Any]:
+        project_id = str(uuid.uuid4())
+        now = utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO projects
+                (id, name, objective, stack_json, state, created_at, updated_at)
+                VALUES (?, ?, ?, '{}', 'active', ?, ?)""",
+                (project_id, name, objective, now, now),
+            )
+        return self.get_project(project_id)
+
+    def get_project(self, project_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM projects WHERE id = ?", (project_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(project_id)
+        value = dict(row)
+        value["stack"] = json.loads(value.pop("stack_json") or "{}")
+        return value
+
+    def list_projects(self) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute("SELECT id FROM projects ORDER BY updated_at DESC").fetchall()
+        return [self.get_project(row[0]) for row in rows]
+
+    def add_lesson(
+        self,
+        project_id: str,
+        problem: str,
+        solution: str,
+        confidence: float,
+        evidence: str = "",
+    ) -> dict[str, Any]:
+        self.get_project(project_id)
+        lesson_id = str(uuid.uuid4())
+        now = utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO lessons_learned
+                (id, project_id, problem, solution, evidence, confidence, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (lesson_id, project_id, problem, solution, evidence, confidence, now, now),
+            )
+        return self.get_lesson(lesson_id)
+
+    def get_lesson(self, lesson_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM lessons_learned WHERE id = ?", (lesson_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(lesson_id)
+        return dict(row)
+
+    def list_lessons(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            if project_id:
+                rows = connection.execute(
+                    "SELECT * FROM lessons_learned WHERE project_id = ? ORDER BY created_at DESC",
+                    (project_id,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT * FROM lessons_learned ORDER BY created_at DESC"
+                ).fetchall()
+        return [dict(row) for row in rows]
+
+    def export_memory(self) -> dict[str, Any]:
+        return {
+            "schema_version": 1,
+            "exported_at": utc_now(),
+            "projects": self.list_projects(),
+            "lessons_learned": self.list_lessons(),
+            "actions": self.list_actions(limit=500),
+        }
+
+    def delete_project_memory(self, project_id: str) -> bool:
+        with self.connect() as connection:
+            cursor = connection.execute("DELETE FROM projects WHERE id = ?", (project_id,))
+        return cursor.rowcount > 0
+
     @staticmethod
     def _decode(row: sqlite3.Row) -> dict[str, Any]:
         value = dict(row)
