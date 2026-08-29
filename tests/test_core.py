@@ -13,6 +13,8 @@ from lz_agent.localization import (
 )
 from lz_agent.plugins import PluginRegistry, PluginValidationError, load_manifest
 from lz_agent.policies import PolicyEngine, Risk
+from lz_agent.providers import NativeAgentProvider
+from lz_agent.web_research import ResearchError, _validate_public_url
 from PIL import Image
 
 
@@ -342,3 +344,36 @@ def test_device_detection_is_private_by_default(tmp_path: Path) -> None:
         microphones = client.get("/api/v1/audio/devices")
         assert microphones.status_code == 200
         assert "devices" in microphones.json()
+
+
+def test_native_agent_has_no_external_provider_dependency() -> None:
+    response = NativeAgentProvider().complete("organizar a tarefa")
+    assert response.provider == "lz-agent"
+    assert response.model == "native-core-v1"
+    assert response.offline is True
+
+
+def test_internet_research_requires_explicit_approval(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        denied = client.post(
+            "/api/v1/research/search",
+            json={"query": "LZ Agent", "locale": "pt-BR", "approved": False},
+        )
+        assert denied.status_code == 409
+
+
+def test_internet_fetch_blocks_local_networks() -> None:
+    for url in ("http://127.0.0.1/admin", "http://localhost/", "file:///etc/passwd"):
+        try:
+            _validate_public_url(url)
+        except ResearchError:
+            pass
+        else:
+            raise AssertionError(f"URL local deveria ser bloqueada: {url}")

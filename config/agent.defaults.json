@@ -13,9 +13,12 @@
     "clone_voice_requires_verified_consent": true
   },
   "providers": {
-    "general": {"provider": "openai", "model": "gpt-5.6-sol", "reasoning": "medium"},
-    "coding": {"provider": "openai", "model": "gpt-5.3-codex", "reasoning": "high"}
+    "native": {"provider": "lz-agent", "model": "native-core-v1", "offline": true},
+    "general": {"provider": "lz-agent", "model": "native-core-v1"},
+    "coding": {"provider": "lz-agent", "model": "native-core-v1"},
+    "external_providers_enabled": false
   },
+  "internet": {"enabled": true, "requires_explicit_approval": true, "block_private_networks": true},
   "memory": {
     "backend": "sqlite", "project_memory": true, "lessons_learned": true,
     "action_ledger": true, "private_mode_retention": false

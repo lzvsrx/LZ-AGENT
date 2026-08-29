@@ -17,3 +17,8 @@
 - Sugestões rastreáveis, decisões do usuário e backup SQLite com integridade/SHA-256.
 - Grants de plugins persistentes, declarados e sujeitos a confirmação explícita.
 - Matriz auditável de implementação contra o Documento Mestre 2026.
+- Cadastro/login local, detecção privada do dispositivo e entradas de microfone.
+- Núcleo de IA nativo `native-core-v1`, sem Ollama ou provedor externo obrigatório.
+- Pesquisa web consentida e auditada, com bloqueio de redes privadas e limites de conteúdo.
+- Checkpoints Git limitados e restauração verificada com backup de segurança.
+- Política reproduzível por código/CLI para Unity, Unreal e Godot.

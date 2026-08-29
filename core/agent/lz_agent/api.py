@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Literal
 
+import httpx
 from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,8 +20,9 @@ from .devices import DeviceDetector
 from .documents import DocumentError, inspect_document
 from .localization import Translator, locale_fallbacks, normalize_locale, writing_direction
 from .plugins import PluginRegistry
-from .providers import LocalFallbackProvider
+from .providers import NativeAgentProvider
 from .service import AgentService
+from .web_research import ResearchError, fetch_public_text, wikipedia_search
 
 
 class ChatRequest(BaseModel):
@@ -82,11 +84,22 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=1024)
 
 
+class ResearchSearchRequest(BaseModel):
+    query: str = Field(min_length=2, max_length=500)
+    locale: str = Field(default="pt-BR", max_length=35)
+    approved: bool = False
+
+
+class ResearchFetchRequest(BaseModel):
+    url: str = Field(min_length=10, max_length=2048)
+    approved: bool = False
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     database = Database(settings.database, settings.root / "data" / "migrations")
     database.migrate()
-    service = AgentService(database, LocalFallbackProvider())
+    service = AgentService(database, NativeAgentProvider())
     auth = AuthService(database)
     audio_capabilities = AudioCapabilityRegistry()
     translator = Translator(settings.root / "shared" / "localization")
@@ -161,6 +174,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/audio/devices")
     def microphones() -> dict:
         return input_devices()
+
+    @app.post("/api/v1/research/search")
+    def research_search(request: ResearchSearchRequest) -> dict:
+        if not request.approved:
+            raise HTTPException(
+                status_code=409, detail="Acesso à internet exige aprovação explícita"
+            )
+        try:
+            results = wikipedia_search(request.query, normalize_locale(request.locale))
+        except (ValueError, httpx.HTTPError) as error:
+            raise HTTPException(status_code=502, detail=str(error)) from error
+        database.record_action(
+            request.query,
+            "internet.research.search",
+            "succeeded",
+            result={"count": len(results), "source": "Wikipedia"},
+            permission="internet.search.confirmed",
+        )
+        return {"query": request.query, "results": results}
+
+    @app.post("/api/v1/research/fetch")
+    def research_fetch(request: ResearchFetchRequest) -> dict:
+        if not request.approved:
+            raise HTTPException(
+                status_code=409, detail="Acesso à internet exige aprovação explícita"
+            )
+        try:
+            result = fetch_public_text(request.url)
+        except (ResearchError, httpx.HTTPError) as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        database.record_action(
+            request.url,
+            "internet.research.fetch",
+            "succeeded",
+            result={"content_type": result["content_type"], "characters": len(result["text"])},
+            permission="internet.fetch.confirmed",
+        )
+        return result
 
     @app.get("/api/v1/audio/capabilities")
     def audio(locale: str | None = None) -> dict:

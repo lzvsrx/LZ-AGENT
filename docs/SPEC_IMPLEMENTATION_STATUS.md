@@ -13,7 +13,9 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Memória por projeto | Parcial funcional | projetos, lições, sugestões, exportação, exclusão, backup e restauração SQLite verificados | edição, busca e retenção configurável |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
 | Checkpoint/diff/rollback | Parcial funcional | checkpoint captura commit, arquivos e diff Git limitado; restauração cria backup de segurança | aplicação/reversão de patch com confirmação e testes pós-mudança |
-| Provedores de IA | Estrutura apenas | interface/fallback local e configuração versionada | adaptadores autenticados, roteamento e métricas por ação |
+| IA própria do agente | Núcleo nativo inicial | `native-core-v1` local, auditável e sem Ollama/provedor externo | corpus licenciado, treinamento, pesos próprios, avaliações e assinatura |
+| Paridade de capacidades de IA | Matriz definida | roadmap separa conversa, código, pesquisa, multimodal, ferramentas e avaliações | implementar e aprovar cada gate sem copiar tecnologia proprietária |
+| Pesquisa na internet | Parcial funcional | busca consentida, leitura limitada, auditoria e bloqueio de rede privada | múltiplas fontes, citações no chat, cache/robots e defesa contra prompt injection |
 | Texto e idiomas globais | Infraestrutura parcial | BCP 47, fallback, RTL, `pt-BR` e `en` | catálogos revisados por falantes e testes de layout/formato |
 | STT/TTS | Detecção parcial | registro impede anunciar voz não verificada | engines locais/sistema, consentimento cloud e testes por locale |
 | Imagens/documentos | Parcial funcional | metadados de imagem/PDF/texto sem retenção | OCR, descrição semântica autorizada e câmera |
@@ -30,6 +32,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Releases GitHub | Preparado localmente | commits, tag inicial e workflows | autenticar GitHub, executar CI e publicar artefatos validados |
 | Conformidade mundial | Processo parcial | matriz inicial Brasil/SP, UE, Reino Unido e EUA | revisão jurídica por país/estado/setor antes de declarar suporte |
 | Série de vídeos | Planejado | estrutura descrita no PDF | roteiros, gravação, legendas e release reproduzível por episódio |
+| Unity/Unreal/Godot por código | Política definida | fontes/configurações versionadas e builds headless/CLI obrigatórios | runners isolados e projetos reais testados em CI por motor |
 
 ## Ordem de implementação recomendada
 

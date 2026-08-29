@@ -17,6 +17,9 @@ O acompanhamento requisito por requisito fica em
 [`docs/SPEC_IMPLEMENTATION_STATUS.md`](docs/SPEC_IMPLEMENTATION_STATUS.md); a matriz separa o que
 funciona, o que é parcial e o que ainda está planejado.
 
+A comparação testável de conversa, código, pesquisa, voz, visão, memória, ferramentas e outras
+capacidades de IA fica em [`docs/AI_CAPABILITY_ROADMAP.md`](docs/AI_CAPABILITY_ROADMAP.md).
+
 > [!IMPORTANT]
 > O projeto está em desenvolvimento alfa. O núcleo local, a interface web e o cliente Windows já
 > possuem partes executáveis e testadas; Android e Linux possuem clientes iniciais, enquanto voz completa, visão semântica, sincronização,
@@ -94,9 +97,18 @@ Abra:
 - saúde: <http://127.0.0.1:8765/api/v1/system/health>;
 - capacidades instaladas: <http://127.0.0.1:8765/api/v1/system/capabilities>.
 
-Sem chave externa, o agente permanece utilizável no fallback local determinístico. Ele registra a
-solicitação e informa com clareza que um modelo de IA não foi acionado; nunca simula uma execução que
-não aconteceu.
+O chat usa o núcleo próprio `native-core-v1`, executado dentro do LZ Agent e sem Ollama ou provedor
+externo obrigatório. Esta etapa organiza, audita e encaminha tarefas; ainda não existem pesos
+generativos próprios treinados, portanto o programa declara essa limitação e nunca simula uma
+resposta de modelo que não aconteceu. Treinamento futuro exige corpus licenciado, avaliações e pesos
+reproduzíveis e assinados.
+
+## Internet e pesquisa
+
+Pesquisa é separada da IA e não libera acesso arbitrário. `POST /api/v1/research/search` consulta uma
+fonte pública somente com `approved: true`; `POST /api/v1/research/fetch` lê no máximo 1 MB de
+texto/HTML/JSON, não segue redirecionamentos e bloqueia loopback, redes privadas, endereços
+reservados, credenciais em URL e esquemas não HTTP(S). Toda consulta concluída entra no Action Ledger.
 
 ## Conta local e login
 
@@ -210,8 +222,11 @@ permissão nem execução. Habilitação e grants são persistidos separadamente
 concessão e rejeitam capacidades não declaradas no manifesto. Os pacotes iniciais são Produtividade,
 Desenvolvedor, Mídia e Blender.
 
-O próximo nível inclui grants persistentes, sandbox, entrada/saída validada, timeout, cancelamento e
-registro de toda execução no Action Ledger.
+O próximo nível inclui sandbox, entrada/saída validada, timeout, cancelamento e registro de toda
+execução no Action Ledger. Projetos Unity, Unreal Engine e Godot serão produzidos por código e
+automação reproduzível: fontes, cenas textuais, configurações e manifests versionados, com builds
+headless/batch por CLI e nenhuma etapa manual oculta em editor. Consulte
+[`docs/ENGINE_CODE_WORKFLOW.md`](docs/ENGINE_CODE_WORKFLOW.md).
 
 ## Testes e diagnóstico
 

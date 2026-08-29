@@ -16,8 +16,8 @@ class Provider(Protocol):
     def complete(self, prompt: str) -> ProviderResponse: ...
 
 
-class LocalFallbackProvider:
-    """Deterministic fallback that keeps core flows usable without credentials."""
+class NativeAgentProvider:
+    """First native LZ reasoning layer, owned and executed entirely by this project."""
 
     def complete(self, prompt: str) -> ProviderResponse:
         normalized = prompt.strip()
@@ -25,10 +25,10 @@ class LocalFallbackProvider:
             text = "Digite ou fale uma tarefa para começar."
         else:
             text = (
-                "Estou em modo local e registrei sua solicitação. Para raciocínio com um "
-                "modelo de IA, "
-                "configure um provedor autorizado nas configurações. Solicitação: " + normalized
+                "O núcleo nativo do LZ Agent registrou sua solicitação. O motor atual organiza, "
+                "audita e encaminha tarefas locais, mas ainda não possui pesos generativos "
+                "próprios treinados. Solicitação: " + normalized
             )
         return ProviderResponse(
-            text=text, provider="local", model="deterministic-fallback", offline=True
+            text=text, provider="lz-agent", model="native-core-v1", offline=True
         )
