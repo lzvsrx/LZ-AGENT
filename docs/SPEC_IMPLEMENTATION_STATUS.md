@@ -12,7 +12,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
 | Memória por projeto | Parcial funcional | projetos, lições, sugestões, exportação, exclusão, backup e restauração SQLite verificados | edição, busca e retenção configurável |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
-| Checkpoint/diff/rollback | Parcial | restauração cria backup de segurança; tabela e política de checkpoints existem | checkpoint de arquivos/Git, diff e rollback de projetos |
+| Checkpoint/diff/rollback | Parcial funcional | checkpoint captura commit, arquivos e diff Git limitado; restauração cria backup de segurança | aplicação/reversão de patch com confirmação e testes pós-mudança |
 | Provedores de IA | Estrutura apenas | interface/fallback local e configuração versionada | adaptadores autenticados, roteamento e métricas por ação |
 | Texto e idiomas globais | Infraestrutura parcial | BCP 47, fallback, RTL, `pt-BR` e `en` | catálogos revisados por falantes e testes de layout/formato |
 | STT/TTS | Detecção parcial | registro impede anunciar voz não verificada | engines locais/sistema, consentimento cloud e testes por locale |

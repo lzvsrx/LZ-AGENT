@@ -383,6 +383,52 @@ class Database:
             )
         return self.get_plugin_state(plugin_id)
 
+    def create_checkpoint(
+        self,
+        project_id: str,
+        commit_hash: str,
+        files: list[str],
+        diff: str,
+        test_result: str = "not-run",
+    ) -> dict[str, Any]:
+        self.get_project(project_id)
+        checkpoint_id = str(uuid.uuid4())
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO checkpoints
+                (id, project_id, commit_hash, files_json, diff, test_result, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    checkpoint_id,
+                    project_id,
+                    commit_hash,
+                    json.dumps(files),
+                    diff,
+                    test_result,
+                    utc_now(),
+                ),
+            )
+        return self.get_checkpoint(checkpoint_id)
+
+    def get_checkpoint(self, checkpoint_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM checkpoints WHERE id = ?", (checkpoint_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(checkpoint_id)
+        value = dict(row)
+        value["files"] = json.loads(value.pop("files_json") or "[]")
+        return value
+
+    def list_checkpoints(self, project_id: str) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT id FROM checkpoints WHERE project_id = ? ORDER BY created_at DESC",
+                (project_id,),
+            ).fetchall()
+        return [self.get_checkpoint(row[0]) for row in rows]
+
     @staticmethod
     def _decode(row: sqlite3.Row) -> dict[str, Any]:
         value = dict(row)

@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 
 from . import __version__
 from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
+from .checkpoints import CheckpointError, GitCheckpointService
 from .config import Settings
 from .database import Database
 from .documents import DocumentError, inspect_document
@@ -74,6 +75,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     audio_capabilities = AudioCapabilityRegistry()
     translator = Translator(settings.root / "shared" / "localization")
     plugins = PluginRegistry(settings.root / "plugins")
+    checkpoints = GitCheckpointService(settings.root)
     app = FastAPI(title="LZ Agent Local API", version=__version__)
     web = settings.root / "apps" / "web"
 
@@ -311,6 +313,41 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             permission="learning.suggest",
         )
         return suggestion
+
+    @app.get("/api/v1/projects/{project_id}/checkpoints")
+    def list_checkpoints(project_id: str) -> list[dict]:
+        try:
+            database.get_project(project_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        return database.list_checkpoints(project_id)
+
+    @app.post("/api/v1/projects/{project_id}/checkpoints", status_code=201)
+    def create_checkpoint(project_id: str) -> dict:
+        try:
+            database.get_project(project_id)
+            snapshot = checkpoints.capture()
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        except CheckpointError as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
+        checkpoint = database.create_checkpoint(
+            project_id,
+            snapshot["commit_hash"],
+            snapshot["files"],
+            snapshot["diff"],
+        )
+        checkpoint["diff_truncated"] = snapshot["diff_truncated"]
+        database.record_action(
+            "Criar checkpoint antes de mudança",
+            "projects.checkpoints.create",
+            "succeeded",
+            parameters={"checkpoint_id": checkpoint["id"]},
+            result={"commit_hash": checkpoint["commit_hash"], "files": checkpoint["files"]},
+            project_id=project_id,
+            permission="project.checkpoint",
+        )
+        return checkpoint
 
     @app.patch("/api/v1/suggestions/{suggestion_id}")
     def decide_suggestion(suggestion_id: str, request: SuggestionDecisionRequest) -> dict:

@@ -274,3 +274,22 @@ def test_memory_restore_requires_hash_confirmation_and_safety_backup(tmp_path: P
         assert original["id"] in project_ids
         assert temporary["id"] not in project_ids
         assert client.get("/api/v1/actions").json()[0]["tool"] == "memory.backup.restore"
+
+
+def test_project_checkpoint_captures_git_state(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        project = client.post("/api/v1/projects", json={"name": "Checkpoint"}).json()
+        response = client.post(f"/api/v1/projects/{project['id']}/checkpoints")
+        assert response.status_code == 201
+        checkpoint = response.json()
+        assert len(checkpoint["commit_hash"]) == 40
+        assert client.get(
+            f"/api/v1/projects/{project['id']}/checkpoints"
+        ).json()[0]["id"] == checkpoint["id"]

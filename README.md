@@ -175,6 +175,10 @@ Fluxo de mudança relevante:
 analisar → checkpoint → política/aprovação → alterar → diff → testar → registrar → manter ou rollback
 ```
 
+`POST /api/v1/projects/{id}/checkpoints` captura somente por comandos Git fixos e de leitura o
+commit atual, arquivos modificados e o diff antes da mudança. A captura tem timeout e limite de 2 MiB;
+ela não executa rollback automaticamente nem aceita argumentos de shell enviados pelo cliente.
+
 Segredos ficam fora do repositório. Copie `.env.example` para `.env` somente quando habilitar um
 provedor externo; `.env`, bancos, backups, caches, certificados e ambientes virtuais são ignorados.
 
