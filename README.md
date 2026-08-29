@@ -98,6 +98,26 @@ Sem chave externa, o agente permanece utilizável no fallback local determiníst
 solicitação e informa com clareza que um modelo de IA não foi acionado; nunca simula uma execução que
 não aconteceu.
 
+## Conta local e login
+
+A API oferece cadastro, login, sessão, consulta do perfil e logout em `/api/v1/auth/*`. Senhas nunca
+são armazenadas: o banco guarda somente hash Argon2id com salt aleatório. Tokens de sessão possuem
+256 bits de entropia, ficam armazenados somente como SHA-256, expiram em 30 dias e podem ser
+revogados. A interface web mantém o token apenas em `sessionStorage`.
+
+Esta primeira entrega cria a identidade local; exigir autenticação em toda operação sensível será
+feito por etapas para não bloquear clientes nativos antigos sem aviso.
+
+## Dispositivo, microfone e voz
+
+`GET /api/v1/system/device` identifica tipo de aparelho, sistema/versão, arquitetura, processador e
+CPUs lógicas. O nome do dispositivo fica oculto por padrão e o ID aleatório muda ao reiniciar o
+núcleo. `GET /api/v1/audio/devices` consulta entradas PortAudio e marca o microfone padrão.
+
+Na interface web, **Usar microfone** inicia ditado somente após ação explícita. Quando disponível, o
+reconhecimento do navegador preenche o campo de texto; ele pode usar o serviço de fala configurado
+pelo próprio navegador. Identificação biométrica do falante não é realizada nem usada como senha.
+
 ## Cliente Windows
 
 O projeto [`apps/windows/LzAgent.Windows.csproj`](apps/windows/LzAgent.Windows.csproj) usa WinUI 3 e

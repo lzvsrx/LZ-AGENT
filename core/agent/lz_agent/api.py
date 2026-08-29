@@ -3,16 +3,19 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Annotated, Literal
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import __version__
+from .audio_devices import input_devices
+from .auth import AuthenticationError, AuthService
 from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
 from .checkpoints import CheckpointError, GitCheckpointService
 from .config import Settings
 from .database import Database
+from .devices import DeviceDetector
 from .documents import DocumentError, inspect_document
 from .localization import Translator, locale_fallbacks, normalize_locale, writing_direction
 from .plugins import PluginRegistry
@@ -67,15 +70,29 @@ class RestoreBackupRequest(BaseModel):
     confirmation: str
 
 
+class RegisterRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    display_name: str = Field(min_length=1, max_length=100)
+    password: str = Field(min_length=12, max_length=1024)
+    locale: str = Field(default="pt-BR", max_length=35)
+
+
+class LoginRequest(BaseModel):
+    username: str = Field(min_length=3, max_length=64)
+    password: str = Field(min_length=1, max_length=1024)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     database = Database(settings.database, settings.root / "data" / "migrations")
     database.migrate()
     service = AgentService(database, LocalFallbackProvider())
+    auth = AuthService(database)
     audio_capabilities = AudioCapabilityRegistry()
     translator = Translator(settings.root / "shared" / "localization")
     plugins = PluginRegistry(settings.root / "plugins")
     checkpoints = GitCheckpointService(settings.root)
+    devices = DeviceDetector()
     app = FastAPI(title="LZ Agent Local API", version=__version__)
     web = settings.root / "apps" / "web"
 
@@ -90,9 +107,60 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "stats": database.stats(),
         }
 
+    @app.post("/api/v1/auth/register", status_code=201)
+    def register(request: RegisterRequest) -> dict:
+        try:
+            locale = normalize_locale(request.locale)
+            user = auth.register(
+                request.username, request.display_name, request.password, locale
+            )
+        except (AuthenticationError, ValueError) as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        database.record_action(
+            "Cadastrar usuário local",
+            "auth.users.register",
+            "succeeded",
+            parameters={"user_id": user["id"]},
+            permission="auth.register",
+        )
+        return user
+
+    @app.post("/api/v1/auth/login")
+    def login(request: LoginRequest) -> dict:
+        try:
+            session = auth.login(request.username, request.password)
+        except AuthenticationError as error:
+            raise HTTPException(status_code=401, detail=str(error)) from error
+        return session
+
+    @app.get("/api/v1/auth/me")
+    def current_user(authorization: Annotated[str | None, Header()] = None) -> dict:
+        token = _bearer_token(authorization)
+        try:
+            return auth.authenticate(token)
+        except AuthenticationError as error:
+            raise HTTPException(status_code=401, detail=str(error)) from error
+
+    @app.post("/api/v1/auth/logout", status_code=204)
+    def logout(authorization: Annotated[str | None, Header()] = None) -> None:
+        token = _bearer_token(authorization)
+        try:
+            auth.authenticate(token)
+        except AuthenticationError as error:
+            raise HTTPException(status_code=401, detail=str(error)) from error
+        auth.logout(token)
+
     @app.get("/api/v1/system/capabilities")
     def capabilities() -> dict:
         return runtime_diagnostics(settings.database)
+
+    @app.get("/api/v1/system/device")
+    def device(include_name: bool = False) -> dict:
+        return devices.profile(include_name=include_name)
+
+    @app.get("/api/v1/audio/devices")
+    def microphones() -> dict:
+        return input_devices()
 
     @app.get("/api/v1/audio/capabilities")
     def audio(locale: str | None = None) -> dict:
@@ -426,3 +494,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return FileResponse(Path(web / "index.html"))
 
     return app
+
+
+def _bearer_token(authorization: str | None) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token Bearer obrigatório")
+    token = authorization.removeprefix("Bearer ").strip()
+    if not token:
+        raise HTTPException(status_code=401, detail="Token Bearer obrigatório")
+    return token

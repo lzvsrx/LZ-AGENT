@@ -293,3 +293,52 @@ def test_project_checkpoint_captures_git_state(tmp_path: Path) -> None:
         assert client.get(
             f"/api/v1/projects/{project['id']}/checkpoints"
         ).json()[0]["id"] == checkpoint["id"]
+
+
+def test_local_registration_login_and_logout(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    credentials = {"username": "valentina", "password": "uma-senha-local-segura"}
+    with TestClient(create_app(settings)) as client:
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={**credentials, "display_name": "Valentina", "locale": "pt_br"},
+        )
+        assert registered.status_code == 201
+        assert registered.json()["locale"] == "pt-BR"
+        assert "password" not in registered.text
+        invalid_login = client.post(
+            "/api/v1/auth/login", json={**credentials, "password": "errada"}
+        )
+        assert invalid_login.status_code == 401
+        login = client.post("/api/v1/auth/login", json=credentials)
+        token = login.json()["access_token"]
+        headers = {"Authorization": f"Bearer {token}"}
+        assert client.get("/api/v1/auth/me", headers=headers).json()["username"] == "valentina"
+        assert client.post("/api/v1/auth/logout", headers=headers).status_code == 204
+        assert client.get("/api/v1/auth/me", headers=headers).status_code == 401
+
+
+def test_device_detection_is_private_by_default(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        profile = client.get("/api/v1/system/device").json()
+        assert profile["operating_system"]
+        assert profile["architecture"]
+        assert profile["device_type"] in {"desktop-or-laptop", "mobile-or-tablet", "unknown"}
+        assert profile["device_name"] is None
+        assert client.get("/api/v1/system/device?include_name=true").json()["device_name"]
+        microphones = client.get("/api/v1/audio/devices")
+        assert microphones.status_code == 200
+        assert "devices" in microphones.json()
