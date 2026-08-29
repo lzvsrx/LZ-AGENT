@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07121f">
+  <title>LZ Agent</title>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <a class="skip" href="#main">Pular para o conteúdo</a>
+  <div class="shell">
+    <header>
+      <img src="/static/logo.svg" alt="" width="48" height="48">
+      <div><strong>LZ Agent</strong><span>Seu agente pessoal inteligente</span></div>
+      <button id="contrast" type="button" aria-pressed="false">Alto contraste</button>
+    </header>
+    <nav aria-label="Principal">
+      <button class="active" data-view="home">Home</button><button data-view="tasks">Tarefas</button>
+      <button data-view="tools">Ferramentas</button><button data-view="memory">Memória</button>
+      <button data-view="accessibility">Acessibilidade</button><button data-view="devices">Dispositivos</button>
+      <button data-view="developer">Desenvolvedor</button>
+    </nav>
+    <main id="main" tabindex="-1">
+      <section id="home" class="view">
+        <div class="hero">
+          <img id="avatar" src="/static/logo.svg" alt="LZ Agent pronto e aguardando" width="180" height="180">
+          <div><p class="eyebrow">Estado: <span id="state">Pronto</span></p><h1>Como posso ajudar?</h1>
+          <p>Converse em modo local. Ações são auditadas; sessões privadas não guardam conteúdo.</p></div>
+        </div>
+        <form id="chat-form">
+          <label for="message">Sua solicitação</label>
+          <textarea id="message" rows="4" required maxlength="20000" placeholder="Digite uma tarefa…"></textarea>
+          <label class="check"><input id="private" type="checkbox"> Sessão privada (não reter esta conversa)</label>
+          <button class="primary" type="submit">Enviar</button>
+        </form>
+        <div id="response" class="response" role="status" aria-live="polite"></div>
+      </section>
+      <section id="tasks" class="view" hidden><h1>Tarefas</h1><div id="action-list"></div></section>
+      <section id="tools" class="view" hidden><h1>Ferramentas</h1><p>Plugins usam manifestos e permissões mínimas.</p></section>
+      <section id="memory" class="view" hidden><h1>Memória</h1><p>A memória é transparente, exportável e apagável.</p></section>
+      <section id="accessibility" class="view" hidden><h1>Acessibilidade</h1><button id="motion">Reduzir movimento</button><button id="font">Aumentar texto</button></section>
+      <section id="devices" class="view" hidden><h1>Dispositivos</h1><p>A sincronização é opcional e está desativada.</p></section>
+      <section id="developer" class="view" hidden><h1>Desenvolvedor</h1><pre id="health">Carregando diagnóstico…</pre></section>
+    </main>
+  </div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>
+

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lz-agent.dev/schemas/agent-config.schema.json",
+  "title": "LZ Agent canonical configuration",
+  "type": "object",
+  "required": ["schema_version", "agent", "providers", "memory", "database", "ui", "accessibility", "safety", "avatar"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "agent": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "language", "autonomy_level"],
+      "properties": {
+        "name": {"const": "LZ Agent"}, "language": {"type": "string", "minLength": 2},
+        "autonomy_level": {"type": "integer", "minimum": 0, "maximum": 4}
+      }
+    },
+    "providers": {"type": "object"}, "memory": {"type": "object"},
+    "database": {"type": "object"}, "ui": {"type": "object"},
+    "accessibility": {"type": "object"}, "safety": {"type": "object"},
+    "avatar": {"type": "object"}
+  }
+}
+

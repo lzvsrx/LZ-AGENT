@@ -1,0 +1,7 @@
+{
+  "schema_version": 1, "jurisdiction": "EU-EEA", "reviewed_at": "2026-08-29",
+  "status": "engineering-baseline-pending-legal-opinion",
+  "applicable_baseline": ["GDPR", "AI Act 2024/1689", "ePrivacy", "EU consumer law", "European Accessibility Act"],
+  "release_blockers": ["EU representative/DPO assessment", "DPIA", "AI Act role and risk classification", "transfer mechanism", "Article 50 transparency", "conformity assessment if high-risk"]
+}
+

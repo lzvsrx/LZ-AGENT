@@ -1,0 +1,7 @@
+{
+  "schema_version": 1, "id": "dev.lzagent.media", "name": "Mídia",
+  "version": "0.1.0", "description": "Áudio, vídeo, transcrição e legendas.",
+  "permissions": ["media.read.selected"], "commands": ["media.inspect"],
+  "entrypoint": "lz_agent_plugins.media:plugin"
+}
+

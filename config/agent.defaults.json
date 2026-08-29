@@ -1,0 +1,28 @@
+{
+  "$schema": "../shared/schemas/agent-config.schema.json",
+  "schema_version": 1,
+  "agent": {"name": "LZ Agent", "language": "pt-BR", "autonomy_level": 1},
+  "providers": {
+    "general": {"provider": "openai", "model": "gpt-5.6-sol", "reasoning": "medium"},
+    "coding": {"provider": "openai", "model": "gpt-5.3-codex", "reasoning": "high"}
+  },
+  "memory": {
+    "backend": "sqlite", "project_memory": true, "lessons_learned": true,
+    "action_ledger": true, "private_mode_retention": false
+  },
+  "database": {
+    "local_file": "data/lz_agent.db", "migrations": true, "backup": true,
+    "remote_sync": "disabled"
+  },
+  "ui": {"mode": "simple", "theme": "system", "animations": "reduced-when-requested"},
+  "accessibility": {
+    "screen_reader": "system", "captions": true, "keyboard_full_access": true,
+    "voice_control": true, "switch_access": true
+  },
+  "safety": {
+    "confirm_destructive_actions": true, "checkpoint_before_project_change": true,
+    "rollback_on_failed_tests": true
+  },
+  "avatar": {"enabled": true, "render_mode": "auto", "fallback": "2d-static"}
+}
+

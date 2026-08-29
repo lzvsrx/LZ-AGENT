@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "BR-SP",
+  "reviewed_at": "2026-08-29",
+  "status": "engineering-baseline-pending-legal-opinion",
+  "applicable_baseline": [
+    "Constituição Federal", "LGPD Lei 13.709/2018", "Marco Civil Lei 12.965/2014",
+    "CDC Lei 8.078/1990", "ECA Lei 8.069/1990", "ECA Digital Lei 15.211/2025",
+    "LBI Lei 13.146/2015", "Lei de Software 9.609/1998", "Direitos Autorais 9.610/1998"
+  ],
+  "ai_bill_not_law": "PL 2338/2023",
+  "release_blockers": [
+    "parecer jurídico brasileiro", "inventário de dados e bases legais", "RIPD para alto risco",
+    "fluxo completo de direitos LGPD", "plano testado de incidentes", "avaliação ECA Digital",
+    "termos, privacidade e contratos de operadores", "auditoria de acessibilidade"
+  ]
+}
+

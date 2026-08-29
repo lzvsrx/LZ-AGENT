@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lz-agent.dev/schemas/action.schema.json",
+  "type": "object",
+  "required": ["id", "command", "tool", "status", "created_at"],
+  "properties": {
+    "id": {"type": "string", "format": "uuid"}, "command": {"type": "string"},
+    "tool": {"type": "string"}, "status": {"enum": ["proposed", "awaiting_approval", "running", "succeeded", "failed", "denied"]},
+    "created_at": {"type": "string", "format": "date-time"}
+  }
+}
+

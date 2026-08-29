@@ -1,0 +1,7 @@
+{
+  "schema_version": 1, "jurisdiction": "US", "reviewed_at": "2026-08-29",
+  "status": "state-by-state-review-required",
+  "applicable_baseline": ["FTC Act", "COPPA", "state privacy and AI laws", "civil rights laws", "ADA/accessibility", "sectoral laws"],
+  "release_blockers": ["state launch list", "CCPA/CPRA assessment", "biometric-law assessment", "COPPA/age assessment", "sector and automated-decision assessment", "US counsel opinion"]
+}
+

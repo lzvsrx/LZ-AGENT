@@ -1,0 +1,9 @@
+const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
+async function health(){const r=await fetch('/api/v1/system/health');$('#health').textContent=JSON.stringify(await r.json(),null,2)}
+async function actions(){const r=await fetch('/api/v1/actions');const rows=await r.json();$('#action-list').innerHTML=rows.length?rows.map(a=>`<article><strong>${escapeHtml(a.tool)}</strong><p>${escapeHtml(a.command)}</p><small>${escapeHtml(a.status)} · ${new Date(a.created_at).toLocaleString()}</small></article>`).join(''):'<p>Nenhuma ação registrada.</p>'}
+function escapeHtml(v){const d=document.createElement('div');d.textContent=String(v);return d.innerHTML}
+$$('nav button').forEach(b=>b.addEventListener('click',()=>{$$('nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.view').forEach(v=>v.hidden=true);$('#'+b.dataset.view).hidden=false;$('#'+b.dataset.view).focus();if(b.dataset.view==='tasks')actions();if(b.dataset.view==='developer')health()}));
+$('#chat-form').addEventListener('submit',async e=>{e.preventDefault();$('#state').textContent='Pensando';$('#response').textContent='Processando…';try{const r=await fetch('/api/v1/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:$('#message').value,private:$('#private').checked})});const data=await r.json();if(!r.ok)throw new Error(data.detail||'Falha');$('#response').textContent=data.text;$('#state').textContent='Concluído'}catch(err){$('#response').textContent='Não foi possível concluir: '+err.message;$('#state').textContent='Erro'}});
+$('#contrast').addEventListener('click',e=>{document.body.classList.toggle('contrast');e.currentTarget.setAttribute('aria-pressed',document.body.classList.contains('contrast'))});
+$('#motion').addEventListener('click',()=>document.body.classList.toggle('reduced'));$('#font').addEventListener('click',()=>document.body.classList.toggle('large'));health();
+

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1, "id": "dev.lzagent.productivity", "name": "Produtividade",
+  "version": "0.1.0", "description": "Organização local de documentos e rotinas.",
+  "permissions": ["files.read.selected"], "commands": ["documents.summarize"],
+  "entrypoint": "lz_agent_plugins.productivity:plugin"
+}
+

@@ -1,0 +1,7 @@
+{
+  "schema_version": 1, "id": "dev.lzagent.developer", "name": "Desenvolvedor",
+  "version": "0.1.0", "description": "Diagnóstico e assistência de engenharia.",
+  "permissions": ["project.read"], "commands": ["project.inspect", "tests.list"],
+  "entrypoint": "lz_agent_plugins.developer:plugin"
+}
+

@@ -1,0 +1,128 @@
+from __future__ import annotations
+
+import json
+import sqlite3
+import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+
+def utc_now() -> str:
+    return datetime.now(UTC).isoformat()
+
+
+class Database:
+    def __init__(self, path: Path, migrations: Path) -> None:
+        self.path = path
+        self.migrations = migrations
+
+    @contextmanager
+    def connect(self) -> Iterator[sqlite3.Connection]:
+        connection = sqlite3.connect(self.path, timeout=15)
+        connection.row_factory = sqlite3.Row
+        connection.execute("PRAGMA foreign_keys = ON")
+        connection.execute("PRAGMA journal_mode = WAL")
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
+    def migrate(self) -> None:
+        with self.connect() as connection:
+            connection.execute(
+                "CREATE TABLE IF NOT EXISTS schema_migrations("
+                "version TEXT PRIMARY KEY, applied_at TEXT NOT NULL)"
+            )
+            applied = {
+                row[0] for row in connection.execute("SELECT version FROM schema_migrations")
+            }
+            for script in sorted(self.migrations.glob("*.sql")):
+                if script.stem in applied:
+                    continue
+                connection.executescript(script.read_text(encoding="utf-8"))
+                connection.execute(
+                    "INSERT INTO schema_migrations(version, applied_at) VALUES (?, ?)",
+                    (script.stem, utc_now()),
+                )
+
+    def record_action(
+        self,
+        command: str,
+        tool: str,
+        status: str,
+        *,
+        parameters: dict[str, Any] | None = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
+        project_id: str | None = None,
+        permission: str | None = None,
+        model: str = "local-policy",
+    ) -> dict[str, Any]:
+        action_id = str(uuid.uuid4())
+        created_at = utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO agent_actions
+                (id, project_id, command, tool, parameters_json, result_json, error, status,
+                 permission, model, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    action_id,
+                    project_id,
+                    command,
+                    tool,
+                    json.dumps(parameters or {}),
+                    json.dumps(result or {}),
+                    error,
+                    status,
+                    permission,
+                    model,
+                    created_at,
+                    created_at,
+                ),
+            )
+        return self.get_action(action_id)
+
+    def get_action(self, action_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM agent_actions WHERE id = ?", (action_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(action_id)
+        return self._decode(row)
+
+    def list_actions(self, limit: int = 100) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT * FROM agent_actions ORDER BY created_at DESC LIMIT ?", (limit,)
+            ).fetchall()
+        return [self._decode(row) for row in rows]
+
+    def stats(self) -> dict[str, int]:
+        with self.connect() as connection:
+            return {
+                "agent_actions": connection.execute(
+                    "SELECT COUNT(*) FROM agent_actions"
+                ).fetchone()[0],
+                "projects": connection.execute("SELECT COUNT(*) FROM projects").fetchone()[0],
+                "lessons_learned": connection.execute(
+                    "SELECT COUNT(*) FROM lessons_learned"
+                ).fetchone()[0],
+                "suggestions": connection.execute("SELECT COUNT(*) FROM suggestions").fetchone()[0],
+                "artifacts": connection.execute("SELECT COUNT(*) FROM artifacts").fetchone()[0],
+            }
+
+    @staticmethod
+    def _decode(row: sqlite3.Row) -> dict[str, Any]:
+        value = dict(row)
+        for field in ("parameters_json", "result_json"):
+            value[field.removesuffix("_json")] = json.loads(value.pop(field) or "{}")
+        return value
