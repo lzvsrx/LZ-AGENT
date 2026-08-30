@@ -19,7 +19,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Texto e idiomas globais | Infraestrutura parcial | BCP 47, fallback, RTL, `pt-BR` e `en` | catálogos revisados por falantes e testes de layout/formato |
 | STT/TTS | Detecção parcial | registro impede anunciar voz não verificada | engines locais/sistema, consentimento cloud e testes por locale |
 | Imagens/documentos | Parcial funcional | metadados de imagem/PDF/texto sem retenção | OCR, descrição semântica autorizada e câmera |
-| Plugins | Controle parcial funcional | esquema, quatro manifestos, estado e grants persistentes com confirmação | runtime isolado, timeout e contratos I/O |
+| Plugins | Parcial funcional | esquema, quatro plugins executáveis, grants, aprovação, JSON limitado, subprocesso, timeout e auditoria | sandbox forte AppContainer/seccomp/Flatpak, cancelamento cooperativo e assinatura de terceiros |
 | Perfis Lite/Standard/Pro | Detecção parcial | diagnóstico básico de hardware | roteamento de capacidades e testes em hardware-alvo |
 | Acessibilidade combinável | Parcial | semântica/foco/teclado/live regions iniciais | auditorias manuais e automáticas por plataforma e perfis persistentes |
 | Avatar 2D/3D | Parcial funcional | `.blend` mestre, três GLBs, 32 ossos, 13 clips, preview e API de estados | integrar renderer nos clientes, revisar deformações/gestos e otimizar em aparelhos reais |
@@ -37,7 +37,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 ## Ordem de implementação recomendada
 
 1. Completar governança de memória: fontes/artefatos, criptografia por plataforma e retenção por projeto/sessão.
-2. Implementar o runner isolado de plugins antes de adicionar integrações externas.
+2. Endurecer o runner de plugins com sandbox nativa por SO antes de aceitar terceiros.
 3. Implementar um provedor real e um local atrás do mesmo contrato, com consentimento e métricas.
 4. Fechar acessibilidade e empacotamento de um fluxo principal em Windows, Android e Linux.
 5. Adicionar STT/TTS e visão por capacidade verificada, sempre com fallback textual.

@@ -28,3 +28,4 @@
 - Login e token Bearer nos clientes Windows, Android e Linux.
 - Avatar 3D original gerado por código: `.blend`, três GLBs, rig, 13 clips, preview e controlador de estados.
 - Edição e busca de memória por projeto, políticas de retenção e expurgo confirmado/auditado.
+- Runner de plugins com aprovação, grants, contrato JSON, limites, timeout e auditoria de falhas.

@@ -254,14 +254,19 @@ provedor externo; `.env`, bancos, backups, caches, certificados e ambientes virt
 
 ## Plugins
 
-Cada plugin possui ID, versão, descrição, comandos, permissões e entrypoint. O registro rejeita
+Cada plugin possui ID, versão, descrição, comandos, permissões e entrypoint local. O registro rejeita
 manifestos incompletos, IDs inválidos e permissões/comandos duplicados. Instalação não concede
 permissão nem execução. Habilitação e grants são persistidos separadamente, exigem confirmação para
 concessão e rejeitam capacidades não declaradas no manifesto. Os pacotes iniciais são Produtividade,
 Desenvolvedor, Mídia e Blender.
 
-O próximo nível inclui sandbox, entrada/saída validada, timeout, cancelamento e registro de toda
-execução no Action Ledger. Projetos Unity, Unreal Engine e Godot serão produzidos por código e
+`POST /api/v1/plugins/{id}/execute` exige aprovação, plugin habilitado e todas as permissões
+declaradas concedidas. O runner aceita apenas JSON limitado, valida o comando, executa um arquivo
+local com Python isolado, ambiente mínimo, diretório temporário, timeout e limite de saída, e registra
+sucesso ou falha no Action Ledger. Essa fronteira de subprocesso não substitui AppContainer/seccomp;
+por isso plugins de terceiros não confiáveis continuam bloqueados até existir sandbox forte por SO.
+
+Projetos Unity, Unreal Engine e Godot serão produzidos por código e
 automação reproduzível: fontes, cenas textuais, configurações e manifests versionados, com builds
 headless/batch por CLI e nenhuma etapa manual oculta em editor. Consulte
 [`docs/ENGINE_CODE_WORKFLOW.md`](docs/ENGINE_CODE_WORKFLOW.md).
