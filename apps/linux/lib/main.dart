@@ -213,33 +213,39 @@ class _AgentHomeState extends State<AgentHome> {
                 style: Theme.of(context).textTheme.headlineLarge,
               ),
               const SizedBox(height: 20),
-              TextField(
-                controller: _username,
-                autofillHints: const [AutofillHints.username],
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Usuário',
-                ),
+              ExpansionTile(
+                tilePadding: EdgeInsets.zero,
+                title: const Text('Conta local'),
+                children: [
+                  TextField(
+                    controller: _username,
+                    autofillHints: const [AutofillHints.username],
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Usuário',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _password,
+                    obscureText: true,
+                    autofillHints: const [AutofillHints.password],
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Senha',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton(
+                      onPressed: _busy ? null : _login,
+                      child: const Text('Entrar'),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: _password,
-                obscureText: true,
-                autofillHints: const [AutofillHints.password],
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Senha',
-                ),
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: OutlinedButton(
-                  onPressed: _busy ? null : _login,
-                  child: const Text('Entrar'),
-                ),
-              ),
-              const SizedBox(height: 20),
               TextField(
                 controller: _message,
                 minLines: 4,
