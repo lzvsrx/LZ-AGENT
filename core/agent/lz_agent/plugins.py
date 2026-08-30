@@ -40,6 +40,12 @@ class PluginExecutionError(RuntimeError):
     pass
 
 
+def _entrypoint_digest(path: Path) -> str:
+    # Git may materialize text files as LF or CRLF. Integrity covers canonical source content.
+    canonical = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(canonical).hexdigest()
+
+
 def load_manifest(path: Path) -> PluginManifest:
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -75,7 +81,7 @@ def load_manifest(path: Path) -> PluginManifest:
     expected_hash = str(data["integrity_sha256"]).lower()
     if not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
         raise PluginValidationError(f"SHA-256 inválido em {path}")
-    actual_hash = hashlib.sha256((path.parent / entrypoint).read_bytes()).hexdigest()
+    actual_hash = _entrypoint_digest(path.parent / entrypoint)
     if actual_hash != expected_hash:
         raise PluginValidationError(f"Integridade do entrypoint não confere em {path}")
     return PluginManifest(
@@ -195,7 +201,7 @@ class PluginRunner:
         if len(encoded.encode("utf-8")) > 256_000:
             raise PluginExecutionError("Entrada do plugin excede 256 KB")
         entrypoint = (Path(manifest.path).parent / manifest.entrypoint).resolve()
-        actual_hash = hashlib.sha256(entrypoint.read_bytes()).hexdigest()
+        actual_hash = _entrypoint_digest(entrypoint)
         if actual_hash != manifest.integrity_sha256:
             raise PluginExecutionError("Plugin foi alterado depois da validação")
         started = time.perf_counter()

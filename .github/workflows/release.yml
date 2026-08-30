@@ -36,6 +36,7 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             dist/*
   android:
@@ -54,6 +55,7 @@ jobs:
         run: cp apps/android/app/build/outputs/apk/debug/app-debug.apk lz-agent-${{ github.ref_name }}-android-development.apk
       - uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: lz-agent-${{ github.ref_name }}-android-development.apk
   linux:
     runs-on: ubuntu-latest
@@ -68,7 +70,20 @@ jobs:
       - working-directory: apps/linux
         run: flutter analyze && flutter test && flutter build linux --release
       - name: Package Linux alpha
-        run: tar -C apps/linux/build/linux/x64/release/bundle -czf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz .
+        run: |
+          test -x apps/linux/build/linux/x64/release/bundle/lz_agent_linux
+          tar -C apps/linux/build/linux/x64/release/bundle -czf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz .
+          sha256sum lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz > lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
+          tar -tzf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz >/dev/null
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x64-${{ github.ref_name }}
+          path: |
+            lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz
+            lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
       - uses: softprops/action-gh-release@v2
         with:
-          files: lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz
+            lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
