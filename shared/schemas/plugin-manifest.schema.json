@@ -12,7 +12,6 @@
     "description": {"type": "string", "minLength": 1},
     "permissions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
     "commands": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-    "entrypoint": {"type": "string", "minLength": 3}
+    "entrypoint": {"type": "string", "pattern": "^[A-Za-z0-9_-]+\\.py$"}
   }
 }
-

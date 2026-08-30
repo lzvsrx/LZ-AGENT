@@ -20,7 +20,7 @@ from .database import Database
 from .devices import DeviceDetector
 from .documents import DocumentError, inspect_document
 from .localization import Translator, locale_fallbacks, normalize_locale, writing_direction
-from .plugins import PluginRegistry
+from .plugins import PluginExecutionError, PluginRegistry, PluginRunner
 from .providers import NativeAgentProvider
 from .service import AgentService
 from .web_research import ResearchError, fetch_public_text, wikipedia_search
@@ -76,6 +76,12 @@ class PluginGrantRequest(BaseModel):
     approved: bool = False
 
 
+class PluginExecuteRequest(BaseModel):
+    command: str = Field(min_length=3, max_length=200)
+    input: dict = Field(default_factory=dict)
+    approved: bool = False
+
+
 class RestoreBackupRequest(BaseModel):
     filename: str = Field(min_length=4, max_length=255)
     sha256: str = Field(pattern=r"^[0-9a-fA-F]{64}$")
@@ -120,6 +126,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     audio_capabilities = AudioCapabilityRegistry()
     translator = Translator(settings.root / "shared" / "localization")
     plugins = PluginRegistry(settings.root / "plugins")
+    plugin_runner = PluginRunner()
     checkpoints = GitCheckpointService(settings.root)
     devices = DeviceDetector()
     avatar = AvatarController()
@@ -362,6 +369,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ),
         )
         return state
+
+    @app.post("/api/v1/plugins/{plugin_id}/execute")
+    def execute_plugin(plugin_id: str, request: PluginExecuteRequest) -> dict:
+        if not request.approved:
+            raise HTTPException(status_code=409, detail="Confirmação explícita obrigatória")
+        try:
+            manifest = plugins.get(plugin_id)
+            state = database.get_plugin_state(plugin_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Plugin não encontrado") from error
+        if not state["enabled"]:
+            raise HTTPException(status_code=409, detail="Plugin desativado")
+        grants = {item["permission"] for item in state["grants"] if item["granted"]}
+        missing = sorted(set(manifest.permissions) - grants)
+        if missing:
+            raise HTTPException(
+                status_code=403, detail=f"Permissões não concedidas: {', '.join(missing)}"
+            )
+        try:
+            execution = plugin_runner.execute(manifest, request.command, request.input)
+        except PluginExecutionError as error:
+            database.record_action(
+                "Executar plugin", request.command, "failed",
+                parameters={"plugin_id": plugin_id}, error=str(error),
+                permission="plugins.execute.confirmed",
+            )
+            raise HTTPException(status_code=422, detail=str(error)) from error
+        database.record_action(
+            "Executar plugin", request.command, "succeeded",
+            parameters={"plugin_id": plugin_id}, result=execution,
+            permission="plugins.execute.confirmed",
+        )
+        return execution
 
     @app.post("/api/v1/documents/inspect")
     async def inspect(file: Annotated[UploadFile, File()]) -> dict:

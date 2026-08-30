@@ -251,6 +251,22 @@ def test_plugin_requires_confirmation_and_declared_grant(tmp_path: Path) -> None
         )
         assert granted.json()["grants"][0]["granted"] is True
 
+        denied = client.post(
+            f"/api/v1/plugins/{plugin_id}/execute",
+            json={"command": "tests.list", "input": {}, "approved": False},
+        )
+        assert denied.status_code == 409
+        executed = client.post(
+            f"/api/v1/plugins/{plugin_id}/execute",
+            json={"command": "tests.list", "input": {}, "approved": True},
+        )
+        assert executed.status_code == 200
+        assert "pytest" in executed.json()["result"]["checks"]
+        assert executed.json()["isolation"] == "restricted-subprocess"
+        action = client.get("/api/v1/actions").json()[0]
+        assert action["tool"] == "tests.list"
+        assert action["permission"] == "plugins.execute.confirmed"
+
 
 def test_memory_restore_requires_hash_confirmation_and_safety_backup(tmp_path: Path) -> None:
     base = Settings.load()
