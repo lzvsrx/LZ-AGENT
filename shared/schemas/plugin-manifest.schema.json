@@ -3,7 +3,7 @@
   "$id": "https://lz-agent.dev/schemas/plugin-manifest.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "id", "name", "version", "description", "permissions", "commands", "entrypoint"],
+  "required": ["schema_version", "id", "name", "version", "description", "permissions", "commands", "entrypoint", "integrity_sha256"],
   "properties": {
     "schema_version": {"const": 1},
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)+$"},
@@ -12,6 +12,7 @@
     "description": {"type": "string", "minLength": 1},
     "permissions": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
     "commands": {"type": "array", "uniqueItems": true, "items": {"type": "string"}},
-    "entrypoint": {"type": "string", "pattern": "^[A-Za-z0-9_-]+\\.py$"}
+    "entrypoint": {"type": "string", "pattern": "^[A-Za-z0-9_-]+\\.py$"},
+    "integrity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
   }
 }

@@ -2,5 +2,5 @@
   "schema_version": 1, "id": "dev.lzagent.media", "name": "Mídia",
   "version": "0.1.0", "description": "Áudio, vídeo, transcrição e legendas.",
   "permissions": ["media.read.selected"], "commands": ["media.inspect"],
-  "entrypoint": "runner.py"
+  "entrypoint": "runner.py", "integrity_sha256": "dd15d53dc606da2d2f31f85db4b4a28c1fdf715ea4bcee4a02ccbe4881ff02d5"
 }

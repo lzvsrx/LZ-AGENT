@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import platform
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -25,6 +28,7 @@ class PluginManifest:
     permissions: tuple[str, ...]
     commands: tuple[str, ...]
     entrypoint: str
+    integrity_sha256: str
     path: str
 
 
@@ -50,6 +54,7 @@ def load_manifest(path: Path) -> PluginManifest:
         "permissions",
         "commands",
         "entrypoint",
+        "integrity_sha256",
     }
     missing = sorted(required - data.keys())
     if missing:
@@ -67,6 +72,12 @@ def load_manifest(path: Path) -> PluginManifest:
         raise PluginValidationError(f"Entrypoint deve ser um arquivo Python local em {path}")
     if not (path.parent / entrypoint).is_file():
         raise PluginValidationError(f"Entrypoint ausente em {path}")
+    expected_hash = str(data["integrity_sha256"]).lower()
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_hash):
+        raise PluginValidationError(f"SHA-256 inválido em {path}")
+    actual_hash = hashlib.sha256((path.parent / entrypoint).read_bytes()).hexdigest()
+    if actual_hash != expected_hash:
+        raise PluginValidationError(f"Integridade do entrypoint não confere em {path}")
     return PluginManifest(
         schema_version=1,
         id=data["id"],
@@ -76,6 +87,7 @@ def load_manifest(path: Path) -> PluginManifest:
         permissions=permissions,
         commands=commands,
         entrypoint=entrypoint,
+        integrity_sha256=expected_hash,
         path=str(path),
     )
 
@@ -105,15 +117,74 @@ class PluginRegistry:
 
 
 class PluginRunner:
-    """Runs a bundled plugin behind a constrained JSON subprocess boundary.
-
-    This boundary limits time, payload, environment and working directory. It is not an OS security
-    sandbox; untrusted third-party packages remain disabled until a platform sandbox is available.
-    """
+    """Runs a verified bundled plugin only when a strong native sandbox is available."""
 
     def __init__(self, timeout_seconds: float = 5.0, max_output_bytes: int = 1_000_000) -> None:
         self.timeout_seconds = timeout_seconds
         self.max_output_bytes = max_output_bytes
+
+    def status(self) -> dict[str, Any]:
+        system = platform.system()
+        if system == "Linux":
+            helper = shutil.which("bwrap")
+            return {
+                "available": helper is not None,
+                "backend": "bubblewrap" if helper else None,
+                "network": "denied",
+                "filesystem": "allowlist-read-only",
+                "reason": None if helper else "Instale bubblewrap para executar plugins",
+            }
+        if system == "Windows":
+            return {
+                "available": False,
+                "backend": None,
+                "network": "denied",
+                "filesystem": "denied",
+                "reason": "Helper LPAC/AppContainer assinado ainda não está instalado",
+            }
+        return {
+            "available": False,
+            "backend": None,
+            "network": "denied",
+            "filesystem": "denied",
+            "reason": f"Sandbox forte não implementada para {system}",
+        }
+
+    def _sandbox_command(self, entrypoint: Path) -> list[str]:
+        status = self.status()
+        if not status["available"]:
+            raise PluginExecutionError(str(status["reason"]))
+        bwrap = shutil.which("bwrap")
+        if not bwrap:
+            raise PluginExecutionError("Bubblewrap indisponível")
+        sandbox_tmp = "/tmp"  # noqa: S108 - private tmpfs inside a new mount namespace
+        command = [
+            bwrap,
+            "--unshare-all",
+            "--disable-userns",
+            "--cap-drop",
+            "ALL",
+            "--die-with-parent",
+            "--new-session",
+            "--clearenv",
+            "--setenv",
+            "PYTHONIOENCODING",
+            "utf-8",
+            "--proc",
+            "/proc",
+            "--dev",
+            "/dev",
+            "--tmpfs",
+            sandbox_tmp,
+            "--chdir",
+            sandbox_tmp,
+        ]
+        for system_path in ("/usr", "/usr/local", "/lib", "/lib64", "/bin"):
+            if Path(system_path).exists():
+                command.extend(("--ro-bind", system_path, system_path))
+        command.extend(("--ro-bind", str(entrypoint), "/plugin.py"))
+        command.extend(("--", sys.executable, "-I", "/plugin.py"))
+        return command
 
     def execute(
         self, manifest: PluginManifest, command: str, payload: dict[str, Any]
@@ -124,14 +195,15 @@ class PluginRunner:
         if len(encoded.encode("utf-8")) > 256_000:
             raise PluginExecutionError("Entrada do plugin excede 256 KB")
         entrypoint = (Path(manifest.path).parent / manifest.entrypoint).resolve()
+        actual_hash = hashlib.sha256(entrypoint.read_bytes()).hexdigest()
+        if actual_hash != manifest.integrity_sha256:
+            raise PluginExecutionError("Plugin foi alterado depois da validação")
         started = time.perf_counter()
-        environment = {"PYTHONIOENCODING": "utf-8", "LZ_PLUGIN_ID": manifest.id}
-        if os.name == "nt":
-            environment["SYSTEMROOT"] = os.environ.get("SYSTEMROOT", r"C:\Windows")
+        environment = {"PATH": os.environ.get("PATH", "")}
         try:
             with tempfile.TemporaryDirectory(prefix="lz-plugin-") as workspace:
                 process = subprocess.run(  # noqa: S603 - fixed interpreter and validated local path
-                    [sys.executable, "-I", str(entrypoint)],
+                    self._sandbox_command(entrypoint),
                     input=encoded,
                     text=True,
                     encoding="utf-8",
@@ -157,5 +229,6 @@ class PluginRunner:
         return {
             "result": response.get("result", {}),
             "duration_ms": duration_ms,
-            "isolation": "restricted-subprocess",
+            "isolation": "strong-native-sandbox",
+            "sandbox_backend": self.status()["backend"],
         }

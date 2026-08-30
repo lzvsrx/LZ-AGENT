@@ -2,5 +2,5 @@
   "schema_version": 1, "id": "dev.lzagent.productivity", "name": "Produtividade",
   "version": "0.1.0", "description": "Organização local de documentos e rotinas.",
   "permissions": ["files.read.selected"], "commands": ["documents.summarize"],
-  "entrypoint": "runner.py"
+  "entrypoint": "runner.py", "integrity_sha256": "6712c8db7f58bc12b5887a1d52b803241dfd31b40d1e5f281fceedbddbf97702"
 }

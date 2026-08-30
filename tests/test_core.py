@@ -256,16 +256,53 @@ def test_plugin_requires_confirmation_and_declared_grant(tmp_path: Path) -> None
             json={"command": "tests.list", "input": {}, "approved": False},
         )
         assert denied.status_code == 409
+        sandbox = client.get("/api/v1/plugins/sandbox/status").json()
         executed = client.post(
             f"/api/v1/plugins/{plugin_id}/execute",
             json={"command": "tests.list", "input": {}, "approved": True},
         )
-        assert executed.status_code == 200
-        assert "pytest" in executed.json()["result"]["checks"]
-        assert executed.json()["isolation"] == "restricted-subprocess"
+        if sandbox["available"]:
+            assert executed.status_code == 200
+            assert "pytest" in executed.json()["result"]["checks"]
+            assert executed.json()["isolation"] == "strong-native-sandbox"
+        else:
+            assert executed.status_code == 503
         action = client.get("/api/v1/actions").json()[0]
         assert action["tool"] == "tests.list"
-        assert action["permission"] == "plugins.execute.confirmed"
+        expected_permission = (
+            "plugins.execute.confirmed" if sandbox["available"] else "plugins.execute.denied"
+        )
+        assert action["permission"] == expected_permission
+
+
+def test_plugin_integrity_tampering_is_rejected(tmp_path: Path) -> None:
+    plugin_dir = tmp_path / "sample"
+    plugin_dir.mkdir()
+    runner = plugin_dir / "runner.py"
+    runner.write_text("print('safe')", encoding="utf-8")
+    manifest = plugin_dir / "plugin.json"
+    manifest.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "id": "dev.lzagent.sample",
+                "name": "Sample",
+                "version": "1.0.0",
+                "description": "Sample",
+                "permissions": ["project.read"],
+                "commands": ["project.inspect"],
+                "entrypoint": "runner.py",
+                "integrity_sha256": "0" * 64,
+            }
+        ),
+        encoding="utf-8",
+    )
+    try:
+        load_manifest(manifest)
+    except PluginValidationError as error:
+        assert "Integridade" in str(error)
+    else:
+        raise AssertionError("Plugin adulterado deveria ser rejeitado")
 
 
 def test_memory_restore_requires_hash_confirmation_and_safety_backup(tmp_path: Path) -> None:

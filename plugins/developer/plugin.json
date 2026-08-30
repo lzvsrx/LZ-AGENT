@@ -2,5 +2,5 @@
   "schema_version": 1, "id": "dev.lzagent.developer", "name": "Desenvolvedor",
   "version": "0.1.0", "description": "Diagnóstico e assistência de engenharia.",
   "permissions": ["project.read"], "commands": ["project.inspect", "tests.list"],
-  "entrypoint": "runner.py"
+  "entrypoint": "runner.py", "integrity_sha256": "4d2311fd250216f862efd39989f39f6f024a568d54c886854af10c6229f45fdd"
 }

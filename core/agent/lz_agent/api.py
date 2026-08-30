@@ -307,6 +307,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "policy": "Nenhum plugin recebe permissão ou execução apenas por estar instalado.",
         }
 
+    @app.get("/api/v1/plugins/sandbox/status")
+    def plugin_sandbox_status() -> dict:
+        return plugin_runner.status()
+
     @app.get("/api/v1/plugins/{plugin_id}/state")
     def plugin_state(plugin_id: str) -> dict:
         try:
@@ -387,6 +391,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(
                 status_code=403, detail=f"Permissões não concedidas: {', '.join(missing)}"
             )
+        sandbox = plugin_runner.status()
+        if not sandbox["available"]:
+            database.record_action(
+                "Bloquear plugin sem sandbox forte", request.command, "blocked",
+                parameters={"plugin_id": plugin_id}, error=sandbox["reason"],
+                permission="plugins.execute.denied",
+            )
+            raise HTTPException(status_code=503, detail=sandbox["reason"])
         try:
             execution = plugin_runner.execute(manifest, request.command, request.input)
         except PluginExecutionError as error:

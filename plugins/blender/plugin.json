@@ -2,5 +2,5 @@
   "schema_version": 1, "id": "dev.lzagent.blender", "name": "Blender",
   "version": "0.1.0", "description": "Pipeline 3D autorizado via Blender Python API.",
   "permissions": ["project.3d.read"], "commands": ["scene.inspect"],
-  "entrypoint": "runner.py"
+  "entrypoint": "runner.py", "integrity_sha256": "c4bed4ce20aafc6f2ddb200b48455b584e1c38699afb0338fc498462fb3cedc6"
 }
