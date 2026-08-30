@@ -300,6 +300,63 @@ def test_project_checkpoint_captures_git_state(tmp_path: Path) -> None:
         ).json()[0]["id"] == checkpoint["id"]
 
 
+def test_memory_can_be_edited_searched_and_governed(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        project = client.post(
+            "/api/v1/projects", json={"name": "Rascunho", "objective": "Inicial"}
+        ).json()
+        changed = client.put(
+            f"/api/v1/projects/{project['id']}",
+            json={"name": "Projeto acessível", "objective": "Suporte a teclado"},
+        )
+        assert changed.status_code == 200
+        lesson = client.post(
+            f"/api/v1/projects/{project['id']}/lessons",
+            json={
+                "problem": "Foco invisível",
+                "solution": "Contraste inicial",
+                "confidence": 0.7,
+            },
+        ).json()
+        updated_lesson = client.put(
+            f"/api/v1/lessons/{lesson['id']}",
+            json={
+                "problem": "Foco invisível",
+                "solution": "Adicionar indicador de foco com contraste AA",
+                "confidence": 0.95,
+                "evidence": "Teste por teclado",
+            },
+        )
+        assert updated_lesson.json()["confidence"] == 0.95
+        results = client.get(
+            "/api/v1/memory/search",
+            params={"q": "contraste", "project_id": project["id"]},
+        ).json()
+        assert {item["kind"] for item in results} == {"lesson"}
+
+        policy = client.put(
+            "/api/v1/memory/retention",
+            json={"category": "action_ledger", "retention_days": 30},
+        )
+        assert policy.json()["retention_days"] == 30
+        assert client.post(
+            "/api/v1/memory/purge", json={"confirmation": "não"}
+        ).status_code == 409
+        purged = client.post(
+            "/api/v1/memory/purge",
+            json={"confirmation": "APAGAR MEMÓRIA EXPIRADA"},
+        )
+        assert purged.status_code == 200
+        assert purged.json()["deleted"]["agent_actions"] == 0
+
+
 def test_local_registration_login_and_logout(tmp_path: Path) -> None:
     base = Settings.load()
     settings = Settings(

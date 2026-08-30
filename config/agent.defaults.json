@@ -21,7 +21,8 @@
   "internet": {"enabled": true, "requires_explicit_approval": true, "block_private_networks": true},
   "memory": {
     "backend": "sqlite", "project_memory": true, "lessons_learned": true,
-    "action_ledger": true, "private_mode_retention": false
+    "action_ledger": true, "private_mode_retention": false,
+    "retention": {"action_ledger_days": 365, "project_memory_days": null}
   },
   "database": {
     "local_file": "data/lz_agent.db", "migrations": true, "backup": true,

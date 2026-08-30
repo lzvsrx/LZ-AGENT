@@ -6,7 +6,7 @@ import sqlite3
 import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -149,6 +149,16 @@ class Database:
             rows = connection.execute("SELECT id FROM projects ORDER BY updated_at DESC").fetchall()
         return [self.get_project(row[0]) for row in rows]
 
+    def update_project(self, project_id: str, name: str, objective: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                "UPDATE projects SET name = ?, objective = ?, updated_at = ? WHERE id = ?",
+                (name, objective, utc_now(), project_id),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(project_id)
+        return self.get_project(project_id)
+
     def add_lesson(
         self,
         project_id: str,
@@ -190,6 +200,111 @@ class Database:
                     "SELECT * FROM lessons_learned ORDER BY created_at DESC"
                 ).fetchall()
         return [dict(row) for row in rows]
+
+    def update_lesson(
+        self,
+        lesson_id: str,
+        problem: str,
+        solution: str,
+        confidence: float,
+        evidence: str = "",
+    ) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                """UPDATE lessons_learned
+                SET problem = ?, solution = ?, evidence = ?, confidence = ?, updated_at = ?
+                WHERE id = ?""",
+                (problem, solution, evidence, confidence, utc_now(), lesson_id),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(lesson_id)
+        return self.get_lesson(lesson_id)
+
+    def search_memory(
+        self, query: str, *, project_id: str | None = None, limit: int = 50
+    ) -> list[dict[str, Any]]:
+        pattern = f"%{query.casefold()}%"
+        project_filter = " AND project_id = ?" if project_id else ""
+        parameters: tuple[Any, ...] = (pattern, pattern)
+        if project_id:
+            self.get_project(project_id)
+            parameters += (project_id,)
+        results: list[dict[str, Any]] = []
+        searches = (
+            (
+                "project",
+                "projects",
+                "id, name AS title, objective AS detail, updated_at",
+                "name",
+                "objective",
+            ),
+            (
+                "lesson",
+                "lessons_learned",
+                "id, project_id, problem AS title, solution AS detail, updated_at",
+                "problem",
+                "solution",
+            ),
+            (
+                "suggestion",
+                "suggestions",
+                "id, project_id, title, description AS detail, created_at AS updated_at",
+                "title",
+                "description",
+            ),
+        )
+        with self.connect() as connection:
+            for kind, table, fields, first, second in searches:
+                if table == "projects":
+                    scope = " AND id = ?" if project_id else ""
+                else:
+                    scope = project_filter
+                rows = connection.execute(
+                    f"SELECT {fields} FROM {table} "  # noqa: S608 - table/fields are constants
+                    f"WHERE (LOWER({first}) LIKE ? OR LOWER({second}) LIKE ?){scope} "
+                    "ORDER BY updated_at DESC LIMIT ?",
+                    (*parameters, limit),
+                ).fetchall()
+                results.extend({"kind": kind, **dict(row)} for row in rows)
+        results.sort(key=lambda item: item["updated_at"], reverse=True)
+        return results[:limit]
+
+    def retention_policies(self) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            rows = connection.execute(
+                "SELECT category, retention_days, updated_at "
+                "FROM memory_retention_policies ORDER BY category"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def set_retention_policy(self, category: str, retention_days: int | None) -> dict[str, Any]:
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO memory_retention_policies(category, retention_days, updated_at)
+                VALUES (?, ?, ?) ON CONFLICT(category) DO UPDATE SET
+                retention_days=excluded.retention_days, updated_at=excluded.updated_at""",
+                (category, retention_days, utc_now()),
+            )
+            row = connection.execute(
+                "SELECT category, retention_days, updated_at FROM memory_retention_policies "
+                "WHERE category = ?",
+                (category,),
+            ).fetchone()
+        return dict(row)
+
+    def purge_expired_memory(self, *, now: datetime | None = None) -> dict[str, int]:
+        policy = next(
+            item for item in self.retention_policies() if item["category"] == "action_ledger"
+        )
+        days = policy["retention_days"]
+        if days is None:
+            return {"agent_actions": 0}
+        cutoff = ((now or datetime.now(UTC)) - timedelta(days=days)).isoformat()
+        with self.connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM agent_actions WHERE created_at < ?", (cutoff,)
+            )
+        return {"agent_actions": cursor.rowcount}
 
     def create_suggestion(
         self,

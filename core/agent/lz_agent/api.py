@@ -43,6 +43,15 @@ class LessonRequest(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class RetentionPolicyRequest(BaseModel):
+    category: Literal["action_ledger", "private_session"]
+    retention_days: int | None = Field(default=None, ge=1, le=3650)
+
+
+class PurgeMemoryRequest(BaseModel):
+    confirmation: str
+
+
 class SuggestionRequest(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     description: str = Field(min_length=1, max_length=20_000)
@@ -437,6 +446,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         return project
 
+    @app.put("/api/v1/projects/{project_id}")
+    def update_project(project_id: str, request: ProjectRequest) -> dict:
+        try:
+            project = database.update_project(project_id, request.name, request.objective)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        database.record_action(
+            "Editar projeto", "memory.projects.update", "succeeded",
+            parameters={"project_id": project_id}, project_id=project_id,
+            permission="memory.write",
+        )
+        return project
+
     @app.get("/api/v1/projects/{project_id}/lessons")
     def lessons(project_id: str) -> list[dict]:
         return database.list_lessons(project_id)
@@ -459,6 +481,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "succeeded",
             parameters={"lesson_id": lesson["id"]},
             project_id=project_id,
+            permission="learning.write",
+        )
+        return lesson
+
+    @app.put("/api/v1/lessons/{lesson_id}")
+    def update_lesson(lesson_id: str, request: LessonRequest) -> dict:
+        try:
+            lesson = database.update_lesson(
+                lesson_id, request.problem, request.solution, request.confidence, request.evidence
+            )
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Lição não encontrada") from error
+        database.record_action(
+            "Editar lição autorizada", "learning.lessons.update", "succeeded",
+            parameters={"lesson_id": lesson_id}, project_id=lesson["project_id"],
             permission="learning.write",
         )
         return lesson
@@ -553,6 +590,42 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/memory/export")
     def export_memory() -> dict:
         return database.export_memory()
+
+    @app.get("/api/v1/memory/search")
+    def search_memory(
+        q: Annotated[str, Query(min_length=2, max_length=500)],
+        project_id: str | None = None,
+        limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    ) -> list[dict]:
+        try:
+            return database.search_memory(q, project_id=project_id, limit=limit)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+
+    @app.get("/api/v1/memory/retention")
+    def get_retention_policies() -> list[dict]:
+        return database.retention_policies()
+
+    @app.put("/api/v1/memory/retention")
+    def set_retention_policy(request: RetentionPolicyRequest) -> dict:
+        policy = database.set_retention_policy(request.category, request.retention_days)
+        database.record_action(
+            "Alterar política de retenção", "memory.retention.update", "succeeded",
+            parameters={"category": request.category, "retention_days": request.retention_days},
+            permission="memory.retention",
+        )
+        return policy
+
+    @app.post("/api/v1/memory/purge")
+    def purge_memory(request: PurgeMemoryRequest) -> dict:
+        if request.confirmation != "APAGAR MEMÓRIA EXPIRADA":
+            raise HTTPException(status_code=409, detail="Confirmação textual obrigatória")
+        deleted = database.purge_expired_memory()
+        database.record_action(
+            "Apagar memória expirada", "memory.retention.purge", "succeeded",
+            result={"deleted": deleted}, permission="memory.delete.confirmed",
+        )
+        return {"purged": True, "deleted": deleted}
 
     @app.post("/api/v1/memory/backup", status_code=201)
     def backup_memory() -> dict:
