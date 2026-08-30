@@ -3,6 +3,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from lz_agent.api import create_app
+from lz_agent.avatar import AvatarController, AvatarState
 from lz_agent.capabilities import AudioCapabilityRegistry
 from lz_agent.config import Settings
 from lz_agent.localization import (
@@ -407,3 +408,28 @@ def test_internet_fetch_blocks_local_networks() -> None:
             pass
         else:
             raise AssertionError(f"URL local deveria ser bloqueada: {url}")
+
+
+def test_avatar_states_have_motion_and_accessible_fallbacks() -> None:
+    avatar = AvatarController()
+    listening = avatar.update(AvatarState.LISTENING)
+    assert listening["animation"] == "Listening"
+    assert listening["icon"] == "microphone"
+    reduced = avatar.update(AvatarState.THINKING, reduced_motion=True)
+    assert reduced["animation"] == "Static"
+    disabled = avatar.update(AvatarState.PRIVATE, enabled=False)
+    assert disabled["fallback"] == "2d-static"
+
+
+def test_chat_drives_avatar_to_a_terminal_state(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        assert client.get("/api/v1/avatar/state").json()["state"] == "IDLE"
+        assert client.post("/api/v1/chat", json={"message": "Teste"}).status_code == 200
+        assert client.get("/api/v1/avatar/state").json()["state"] == "SUCCESS"

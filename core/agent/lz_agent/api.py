@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from . import __version__
 from .audio_devices import input_devices
 from .auth import AuthenticationError, AuthService
+from .avatar import AvatarController, AvatarState
 from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
 from .checkpoints import CheckpointError, GitCheckpointService
 from .config import Settings
@@ -95,6 +96,12 @@ class ResearchFetchRequest(BaseModel):
     approved: bool = False
 
 
+class AvatarStateRequest(BaseModel):
+    state: AvatarState
+    reduced_motion: bool | None = None
+    enabled: bool | None = None
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.load()
     database = Database(settings.database, settings.root / "data" / "migrations")
@@ -106,11 +113,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     plugins = PluginRegistry(settings.root / "plugins")
     checkpoints = GitCheckpointService(settings.root)
     devices = DeviceDetector()
+    avatar = AvatarController()
     app = FastAPI(title="LZ Agent Local API", version=__version__)
     web = settings.root / "apps" / "web"
 
     protected_prefixes = (
         "/api/v1/actions",
+        "/api/v1/avatar",
         "/api/v1/chat",
         "/api/v1/documents",
         "/api/v1/memory",
@@ -204,6 +213,26 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/v1/audio/devices")
     def microphones() -> dict:
         return input_devices()
+
+    @app.get("/api/v1/avatar/state")
+    def avatar_state() -> dict:
+        return avatar.current()
+
+    @app.put("/api/v1/avatar/state")
+    def set_avatar_state(request: AvatarStateRequest) -> dict:
+        result = avatar.update(
+            request.state,
+            reduced_motion=request.reduced_motion,
+            enabled=request.enabled,
+        )
+        database.record_action(
+            f"Avatar: {request.state.value}",
+            "avatar.state.update",
+            "succeeded",
+            result=result,
+            permission="avatar.control",
+        )
+        return result
 
     @app.post("/api/v1/research/search")
     def research_search(request: ResearchSearchRequest) -> dict:
@@ -371,7 +400,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/v1/chat")
     def chat(request: ChatRequest) -> dict:
-        return service.chat(request.message, request.private)
+        avatar.update(AvatarState.THINKING)
+        try:
+            response = service.chat(request.message, request.private)
+            avatar.update(AvatarState.PRIVATE if request.private else AvatarState.SUCCESS)
+            return response
+        except Exception:
+            avatar.update(AvatarState.ERROR)
+            raise
 
     @app.get("/api/v1/actions")
     def actions(limit: int = Query(50, ge=1, le=500)) -> list[dict]:
