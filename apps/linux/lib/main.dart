@@ -6,12 +6,32 @@ import 'package:flutter/material.dart';
 void main() => runApp(LzAgentApp(api: LocalAgentApi()));
 
 abstract interface class AgentApi {
+  Future<void> login(String username, String password);
   Future<String> chat(String message, {required bool private});
 }
 
 class LocalAgentApi implements AgentApi {
   LocalAgentApi({this.endpoint = 'http://127.0.0.1:8765'});
   final String endpoint;
+  String? _accessToken;
+
+  @override
+  Future<void> login(String username, String password) async {
+    final client = HttpClient()..connectionTimeout = const Duration(seconds: 3);
+    try {
+      final request = await client.postUrl(Uri.parse('$endpoint/api/v1/auth/login'));
+      request.headers.contentType = ContentType.json;
+      request.write(jsonEncode({'username': username, 'password': password}));
+      final response = await request.close();
+      final body = await utf8.decoder.bind(response).join();
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw const HttpException('Credenciais inválidas ou núcleo indisponível.');
+      }
+      _accessToken = (jsonDecode(body) as Map<String, dynamic>)['access_token'] as String;
+    } finally {
+      client.close(force: true);
+    }
+  }
 
   @override
   Future<String> chat(String message, {required bool private}) async {
@@ -19,6 +39,9 @@ class LocalAgentApi implements AgentApi {
     try {
       final request = await client.postUrl(Uri.parse('$endpoint/api/v1/chat'));
       request.headers.contentType = ContentType.json;
+      if (_accessToken != null) {
+        request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $_accessToken');
+      }
       request.write(jsonEncode({'message': message, 'private': private}));
       final response = await request.close();
       final body = await utf8.decoder.bind(response).join();
@@ -61,6 +84,8 @@ class AgentHome extends StatefulWidget {
 }
 
 class _AgentHomeState extends State<AgentHome> {
+  final _username = TextEditingController();
+  final _password = TextEditingController();
   final _message = TextEditingController();
   var _private = false;
   var _busy = false;
@@ -69,8 +94,34 @@ class _AgentHomeState extends State<AgentHome> {
 
   @override
   void dispose() {
+    _username.dispose();
+    _password.dispose();
     _message.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    setState(() {
+      _busy = true;
+      _state = 'Autenticando';
+    });
+    try {
+      await widget.api.login(_username.text.trim(), _password.text);
+      if (!mounted) return;
+      _password.clear();
+      setState(() {
+        _state = 'Autenticado';
+        _response = 'Login concluído para esta sessão do aplicativo.';
+      });
+    } on Object {
+      if (!mounted) return;
+      setState(() {
+        _state = 'Não autenticado';
+        _response = 'Não foi possível entrar. Verifique usuário, senha e núcleo local.';
+      });
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   Future<void> _send() async {
@@ -160,6 +211,33 @@ class _AgentHomeState extends State<AgentHome> {
               Text(
                 'Como posso ajudar?',
                 style: Theme.of(context).textTheme.headlineLarge,
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: _username,
+                autofillHints: const [AutofillHints.username],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Usuário',
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                autofillHints: const [AutofillHints.password],
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Senha',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: OutlinedButton(
+                  onPressed: _busy ? null : _login,
+                  child: const Text('Entrar'),
+                ),
               ),
               const SizedBox(height: 20),
               TextField(

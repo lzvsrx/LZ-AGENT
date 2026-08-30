@@ -13,18 +13,24 @@
             </NavigationView.MenuItems>
             <ScrollViewer>
                 <Grid Padding="32" MaxWidth="900" HorizontalAlignment="Stretch">
-                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                     <StackPanel Spacing="8">
                         <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Como posso ajudar?" />
                         <TextBlock x:Name="AgentState" AutomationProperties.LiveSetting="Polite" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Text="Estado: pronto" />
                         <TextBlock MaxWidth="680" HorizontalAlignment="Left" Text="O núcleo local mantém memória auditável, permissões mínimas e modo privado." TextWrapping="Wrap" />
                     </StackPanel>
-                    <TextBox x:Name="MessageInput" Grid.Row="1" Margin="0,24,0,0" AcceptsReturn="True" AutomationProperties.HelpText="Digite a tarefa que o LZ Agent deve analisar" AutomationProperties.Name="Sua solicitação" Header="Sua solicitação" MinHeight="120" PlaceholderText="Digite uma tarefa…" TextWrapping="Wrap" />
-                    <StackPanel Grid.Row="2" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
+                    <StackPanel Grid.Row="1" Margin="0,20,0,0" Spacing="8">
+                        <TextBlock Text="Conta local" Style="{StaticResource SubtitleTextBlockStyle}" />
+                        <TextBox x:Name="UsernameInput" Header="Usuário" AutomationProperties.Name="Usuário" />
+                        <PasswordBox x:Name="PasswordInput" Header="Senha" AutomationProperties.Name="Senha" />
+                        <Button x:Name="LoginButton" Click="LoginButton_Click" Content="Entrar" HorizontalAlignment="Left" />
+                    </StackPanel>
+                    <TextBox x:Name="MessageInput" Grid.Row="2" Margin="0,24,0,0" AcceptsReturn="True" AutomationProperties.HelpText="Digite a tarefa que o LZ Agent deve analisar" AutomationProperties.Name="Sua solicitação" Header="Sua solicitação" MinHeight="120" PlaceholderText="Digite uma tarefa…" TextWrapping="Wrap" />
+                    <StackPanel Grid.Row="3" Margin="0,12,0,0" Orientation="Horizontal" Spacing="12">
                         <Button x:Name="SendButton" AutomationProperties.Name="Enviar solicitação" Click="SendButton_Click" Content="Enviar" Style="{StaticResource AccentButtonStyle}" />
                         <CheckBox x:Name="PrivateMode" AutomationProperties.HelpText="Quando ativo, o conteúdo desta conversa não é salvo" Content="Sessão privada" />
                     </StackPanel>
-                    <Border Grid.Row="3" Margin="0,20,0,0" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8">
+                    <Border Grid.Row="4" Margin="0,20,0,0" Padding="16" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" CornerRadius="8">
                         <TextBlock x:Name="ResponseText" AutomationProperties.LiveSetting="Polite" IsTextSelectionEnabled="True" Text="A resposta acessível aparecerá aqui." TextWrapping="Wrap" />
                     </Border>
                 </Grid>

@@ -3,6 +3,9 @@ import 'package:lz_agent_linux/main.dart';
 
 class FakeApi implements AgentApi {
   @override
+  Future<void> login(String username, String password) async {}
+
+  @override
   Future<String> chat(String message, {required bool private}) async =>
       private ? 'Resposta privada' : 'Resposta auditada';
 }
