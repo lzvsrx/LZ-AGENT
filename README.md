@@ -49,7 +49,7 @@ Agent adota o caminho oposto:
 | Núcleo Python/FastAPI | funcional em modo local | API, testes e health check |
 | SQLite e migrações | funcional | schemas `0001`/`0002`, foreign keys e WAL |
 | Action Ledger | funcional | chat, memória e documentos geram ações auditáveis |
-| Memória de projetos | funcional inicial | criar, listar, exportar e apagar com confirmação |
+| Memória de projetos | funcional inicial | criar, editar, pesquisar, reter, exportar e apagar com confirmação |
 | Aprendizado controlado | funcional inicial | lições com problema, solução, evidência e confiança |
 | Políticas de segurança | funcional inicial | risco sensível sempre exige aprovação explícita |
 | Plugins | descoberta/validação funcional | quatro manifestos validados; execução isolada continua em construção |
@@ -123,8 +123,9 @@ revogados. A interface web mantém o token apenas em `sessionStorage`.
 
 Antes da primeira conta, a API permanece em modo bootstrap local. Depois dela, chat, ações, projetos,
 memória, documentos, plugins, sugestões e pesquisa exigem sessão Bearer válida. Novas contas também
-só podem ser criadas por uma sessão autenticada. Os clientes nativos ainda precisam receber telas de
-login antes de essa fase ser considerada concluída em todas as plataformas.
+só podem ser criadas por uma sessão autenticada. Os clientes Windows, Android e Linux possuem
+cadastro/login e enviam o token Bearer ao núcleo. A persistência desse token no cofre nativo de cada
+sistema ainda é um gate antes da produção.
 
 ## Dispositivo, microfone e voz
 
@@ -225,6 +226,12 @@ SQLite é o backend local padrão. O schema armazena ações, projetos, decisõe
 artefatos, preferências, fontes, checkpoints e versões técnicas. Conteúdo de sessão privada não é
 persistido. A inspeção de documentos calcula metadados/hash e processa o arquivo em memória sem
 retê-lo por padrão.
+
+Projetos e lições autorizadas podem ser corrigidos com `PUT /api/v1/projects/{id}` e
+`PUT /api/v1/lessons/{id}`. `GET /api/v1/memory/search?q=...` pesquisa projetos, lições e sugestões,
+com filtro opcional por projeto. `GET/PUT /api/v1/memory/retention` consulta ou altera retenção;
+`null` preserva a categoria até exclusão explícita. `POST /api/v1/memory/purge` exige a frase
+`APAGAR MEMÓRIA EXPIRADA`, remove somente dados vencidos pela política e registra o expurgo.
 
 `POST /api/v1/memory/backup` cria uma cópia SQLite consistente em `data/backups`, executa
 `PRAGMA integrity_check` e devolve tamanho e SHA-256. `POST /api/v1/memory/restore` somente aceita

@@ -1,6 +1,6 @@
 # Auditoria de implementação do Documento Mestre 2026
 
-Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, testes e artefatos reais.
+Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, testes e artefatos reais.
 `Parcial` não significa suporte de produção e `planejado` não deve aparecer como funcional em releases.
 
 | Requisito do documento | Estado | Evidência atual | Próximo critério de conclusão |
@@ -10,7 +10,7 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Android Compose | Parcial funcional | build CLI/VS Code, login, chat, fala opt-in, lint e APK | UI adaptativa, instrumentação TalkBack/Switch Access e assinatura |
 | Linux Flutter | Parcial funcional | login/chat, análise e testes de widget; build Linux na CI | Portals, Flatpak e matriz Wayland/X11 |
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
-| Memória por projeto | Parcial funcional | projetos, lições, sugestões, exportação, exclusão, backup e restauração SQLite verificados | edição, busca e retenção configurável |
+| Memória por projeto | Parcial funcional | projetos/lições editáveis, busca por texto/escopo, retenção do ledger, expurgo confirmado, sugestões, exportação, exclusão, backup e restauração SQLite verificados | fontes/artefatos editáveis, criptografia por plataforma e retenção por projeto/sessão |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
 | Checkpoint/diff/rollback | Parcial funcional | checkpoint captura commit, arquivos e diff Git limitado; restauração cria backup de segurança | aplicação/reversão de patch com confirmação e testes pós-mudança |
 | IA própria do agente | Núcleo nativo inicial | `native-core-v1` local, auditável e sem Ollama/provedor externo | corpus licenciado, treinamento, pesos próprios, avaliações e assinatura |
@@ -36,8 +36,8 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 
 ## Ordem de implementação recomendada
 
-1. Fechar governança de memória: edição, retenção, fontes, sugestões, backup e restauração.
-2. Implementar grants e runner isolado de plugins antes de adicionar integrações externas.
+1. Completar governança de memória: fontes/artefatos, criptografia por plataforma e retenção por projeto/sessão.
+2. Implementar o runner isolado de plugins antes de adicionar integrações externas.
 3. Implementar um provedor real e um local atrás do mesmo contrato, com consentimento e métricas.
 4. Fechar acessibilidade e empacotamento de um fluxo principal em Windows, Android e Linux.
 5. Adicionar STT/TTS e visão por capacidade verificada, sempre com fallback textual.
