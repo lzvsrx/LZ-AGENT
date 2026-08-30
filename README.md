@@ -260,11 +260,16 @@ permissão nem execução. Habilitação e grants são persistidos separadamente
 concessão e rejeitam capacidades não declaradas no manifesto. Os pacotes iniciais são Produtividade,
 Desenvolvedor, Mídia e Blender.
 
-`POST /api/v1/plugins/{id}/execute` exige aprovação, plugin habilitado e todas as permissões
-declaradas concedidas. O runner aceita apenas JSON limitado, valida o comando, executa um arquivo
-local com Python isolado, ambiente mínimo, diretório temporário, timeout e limite de saída, e registra
-sucesso ou falha no Action Ledger. Essa fronteira de subprocesso não substitui AppContainer/seccomp;
-por isso plugins de terceiros não confiáveis continuam bloqueados até existir sandbox forte por SO.
+`POST /api/v1/plugins/{id}/execute` exige aprovação, plugin habilitado, integridade SHA-256 e todas as
+permissões declaradas concedidas. `GET /api/v1/plugins/sandbox/status` mostra a proteção efetiva. No
+Linux, o runner exige Bubblewrap e cria namespaces separados, remove capabilities, bloqueia rede e
+expõe somente runtime e entrypoint como leitura, além de `/tmp` efêmero. Instale com o gerenciador da
+distribuição, por exemplo `sudo apt install bubblewrap` no Ubuntu/Debian.
+
+No Windows, a execução fica bloqueada com HTTP 503 até o helper LPAC/AppContainer assinado estar
+instalado. Não existe fallback para subprocesso comum. Entrada/saída JSON, timeout e limites de
+tamanho continuam obrigatórios; sucesso, falha e bloqueio entram no Action Ledger. Os plugins
+incluídos são pequenos, sem imports externos, e seus hashes fazem parte dos manifestos.
 
 Projetos Unity, Unreal Engine e Godot serão produzidos por código e
 automação reproduzível: fontes, cenas textuais, configurações e manifests versionados, com builds

@@ -35,7 +35,8 @@
   },
   "safety": {
     "confirm_destructive_actions": true, "checkpoint_before_project_change": true,
-    "rollback_on_failed_tests": true
+    "rollback_on_failed_tests": true, "strong_plugin_sandbox_required": true,
+    "plugin_network_default": "deny"
   },
   "avatar": {"enabled": true, "render_mode": "auto", "fallback": "2d-static"}
 }

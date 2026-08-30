@@ -2,13 +2,20 @@
 
 ## Fronteira de plugins
 
-Plugins empacotados executam fora do processo da API, com comando declarado, grants conferidos,
-aprovação explícita, entrada/saída JSON limitadas, ambiente mínimo, diretório temporário e timeout.
-Toda tentativa concluída entra no Action Ledger. Essa contenção reduz falhas acidentais, mas ainda
-não impede por si só que código Python malicioso acesse recursos concedidos ao usuário do sistema.
-Consequentemente, código de terceiros permanece não confiável e desabilitado até receber assinatura,
-revisão e sandbox nativa (AppContainer no Windows e seccomp/Flatpak no Linux; isolamento Android no
-aplicativo correspondente).
+Plugins empacotados exigem comando declarado, grants conferidos, aprovação explícita, SHA-256 válido,
+entrada/saída JSON limitada e timeout. O hash é verificado ao descobrir o plugin e novamente antes de
+executá-lo. Alteração de um byte invalida o pacote. Toda tentativa concluída ou bloqueada entra no
+Action Ledger.
+
+No Linux, apenas Bubblewrap é aceito: novo namespace de usuário/processo/rede/montagem, capabilities
+removidas, rede ausente, runtime somente leitura, somente o entrypoint montado e `/tmp` efêmero. No
+Windows, subprocesso comum, Job Object e low-integrity isoladamente não satisfazem esta política. A
+execução permanece bloqueada até um helper LPAC/AppContainer assinado conceder somente os recursos
+declarados. Outros sistemas também falham fechados. Plugins externos permanecem desabilitados até
+assinatura, revisão de origem e sandbox compatível.
+
+Referências: [Bubblewrap](https://github.com/containers/bubblewrap) e
+[AppContainer/LPAC](https://learn.microsoft.com/windows/win32/secauthz/appcontainer-isolation).
 
 - Privilégio mínimo por plugin e capacidade.
 - Consentimento explícito para exclusões, publicação, mensagens, compras e dados sensíveis.

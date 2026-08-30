@@ -29,3 +29,4 @@
 - Avatar 3D original gerado por código: `.blend`, três GLBs, rig, 13 clips, preview e controlador de estados.
 - Edição e busca de memória por projeto, políticas de retenção e expurgo confirmado/auditado.
 - Runner de plugins com aprovação, grants, contrato JSON, limites, timeout e auditoria de falhas.
+- Sandbox de plugins fail-closed: integridade SHA-256, Bubblewrap forte no Linux, rede negada e bloqueio seguro no Windows até LPAC assinado.
