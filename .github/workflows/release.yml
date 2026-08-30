@@ -25,6 +25,14 @@ jobs:
       - name: Package source and specification
         shell: pwsh
         run: Compress-Archive -Path apps,assets,config,core,data,docs,plugins,shared,versions,README.md,SECURITY.md,CHANGELOG.md -DestinationPath dist/lz-agent-${{ github.ref_name }}-source.zip
+      - name: Package avatar source and LODs
+        shell: pwsh
+        run: |
+          Copy-Item assets/avatar/source/LZ_Agent_Master.blend dist/LZ_Agent_Master-${{ github.ref_name }}.blend
+          Copy-Item assets/avatar/models/LZ_Agent_Lite.glb dist/LZ_Agent_Lite-${{ github.ref_name }}.glb
+          Copy-Item assets/avatar/models/LZ_Agent_Standard.glb dist/LZ_Agent_Standard-${{ github.ref_name }}.glb
+          Copy-Item assets/avatar/models/LZ_Agent_Pro.glb dist/LZ_Agent_Pro-${{ github.ref_name }}.glb
+          Copy-Item assets/avatar/references/generated-preview.png dist/LZ_Agent-preview-${{ github.ref_name }}.png
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
