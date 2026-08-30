@@ -10,6 +10,7 @@
     {"path": "apps/linux", "classification": "original", "owner": "LZ Agent"},
     {"path": "docs/specification", "classification": "asset", "owner": "project owner"},
     {"path": "assets/concept-history", "classification": "asset", "owner": "unverified; release gate"},
+    {"path": "assets/avatar", "classification": "generated", "owner": "LZ Agent", "source": "scripts/generate-avatar.py"},
     {"name": "Python dependencies", "classification": "dependency", "source": "pyproject.toml"},
     {"name": "NuGet dependencies", "classification": "dependency", "source": "apps/windows/LzAgent.Windows.csproj"},
     {"name": "Gradle dependencies", "classification": "dependency", "source": "apps/android/app/build.gradle.kts"},

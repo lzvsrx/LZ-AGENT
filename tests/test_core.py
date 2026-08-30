@@ -1,3 +1,5 @@
+import json
+import struct
 from io import BytesIO
 from pathlib import Path
 
@@ -433,3 +435,25 @@ def test_chat_drives_avatar_to_a_terminal_state(tmp_path: Path) -> None:
         assert client.get("/api/v1/avatar/state").json()["state"] == "IDLE"
         assert client.post("/api/v1/chat", json={"message": "Teste"}).status_code == 200
         assert client.get("/api/v1/avatar/state").json()["state"] == "SUCCESS"
+
+
+def test_avatar_glbs_have_three_lods_and_official_animations() -> None:
+    root = Settings.load().root / "assets" / "avatar" / "models"
+    expected = {
+        "Acting", "Error", "Idle_1", "Idle_2", "Idle_3", "Listening",
+        "Needs_Approval", "Offline", "Private", "Speaking", "Success", "Thinking", "Warning",
+    }
+    triangle_counts = []
+    for level in ("Lite", "Standard", "Pro"):
+        content = (root / f"LZ_Agent_{level}.glb").read_bytes()
+        assert content[:4] == b"glTF"
+        json_length = struct.unpack("<I", content[12:16])[0]
+        document = json.loads(content[20 : 20 + json_length].decode())
+        assert {item["name"] for item in document["animations"]} == expected
+        triangles = sum(
+            document["accessors"][primitive["indices"]]["count"] // 3
+            for mesh in document["meshes"]
+            for primitive in mesh["primitives"]
+        )
+        triangle_counts.append(triangles)
+    assert triangle_counts == sorted(triangle_counts)

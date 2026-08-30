@@ -61,7 +61,7 @@ Agent adota o caminho oposto:
 | Windows WinUI 3 | compila e acessa a API | build x64 com 0 erros/avisos |
 | Android Compose | cliente inicial funcional | build nativo por CLI/VS Code, testes e lint; Android Studio não é necessário |
 | Linux/Flutter/Flatpak | cliente Flutter funcional inicial | análise e testes de widgets passam; pacote Flatpak pendente |
-| Avatar 2D/3D | marca 2D inicial | SVG/PNG/ICO canônicos; GLB, rig, LOD e animações pendentes |
+| Avatar 2D/3D | funcional inicial | `.blend`, GLB Lite/Standard/Pro, rig mecânico, 13 clips e controlador de estado |
 | Releases | automação preparada | CI e workflow de tag; publicação depende de autenticação GitHub |
 
 O número de testes e o suporte declarado mudam com o desenvolvimento. Execute os comandos abaixo em
@@ -185,6 +185,26 @@ cd apps\linux
 ..\..\.toolchains\flutter\bin\flutter.bat analyze
 ..\..\.toolchains\flutter\bin\flutter.bat test
 ```
+
+## Avatar 3D oficial
+
+O avatar em `assets/avatar` é gerado por programação com Blender headless. O arquivo-fonte
+`source/LZ_Agent_Master.blend` preserva o rig mecânico de 32 ossos; `models` contém GLB Lite (4.720
+triângulos), Standard (15.576) e Pro (33.848). Cada GLB possui 13 clips: Idle 1/2/3, Listening,
+Thinking, Speaking, Acting, Needs Approval, Success, Warning, Error, Offline e Private. A prévia
+renderizada fica em `references/generated-preview.png`.
+
+`GET/PUT /api/v1/avatar/state` conecta o núcleo ao `AvatarController`. Chat passa por Thinking e
+termina em Success, Private ou Error. Cada estado fornece animação, expressão e ícone; redução de
+movimento usa `Static`, e desativar o 3D devolve fallback `2d-static`. Regenere os artefatos com:
+
+```powershell
+& 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe' --background --python scripts\generate-avatar.py
+```
+
+O modelo é uma primeira implementação funcional baseada na prancha aprovada, não uma alegação de
+asset final de produção. Integração de renderização nos clientes, revisão profissional das animações,
+testes em aparelhos e otimização continuam sendo gates.
 
 ## Idiomas, texto e áudio
 

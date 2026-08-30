@@ -1,0 +1,7 @@
+{
+  "schema_version": 1,
+  "fps": 30,
+  "clips": ["Idle_1", "Idle_2", "Idle_3", "Listening", "Thinking", "Speaking", "Acting", "Needs_Approval", "Success", "Warning", "Error", "Offline", "Private"],
+  "reduced_motion_clip": "Static",
+  "facial_controls": ["EyesControl", "MouthControl", "LightsControl"]
+}

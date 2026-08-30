@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
@@ -43,6 +44,7 @@ import java.util.Locale
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
+    private var accessToken: String? = null
     private var pendingVoiceResult: ((Result<String>) -> Unit)? = null
     private var speechRecognizer: SpeechRecognizer? = null
     private val microphonePermission =
@@ -53,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { LzAgentScreen(::sendMessage, ::startVoiceInput) }
+        setContent { LzAgentScreen(::login, ::sendMessage, ::startVoiceInput) }
     }
 
     override fun onDestroy() {
@@ -120,6 +122,29 @@ class MainActivity : ComponentActivity() {
         speechRecognizer = null
     }
 
+    private fun login(username: String, password: String, completed: (Result<Unit>) -> Unit) {
+        Executors.newSingleThreadExecutor().execute {
+            val result = runCatching {
+                val connection = URL("${BuildConfig.AGENT_URL}/api/v1/auth/login").openConnection() as HttpURLConnection
+                try {
+                    connection.requestMethod = "POST"
+                    connection.connectTimeout = 3_000
+                    connection.readTimeout = 15_000
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    val body = JSONObject().put("username", username).put("password", password).toString()
+                    connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+                    if (connection.responseCode !in 200..299) error("HTTP ${connection.responseCode}")
+                    accessToken = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+                        .getString("access_token")
+                } finally {
+                    connection.disconnect()
+                }
+            }
+            runOnUiThread { completed(result) }
+        }
+    }
+
     private fun sendMessage(message: String, privateMode: Boolean, completed: (Result<String>) -> Unit) {
         Executors.newSingleThreadExecutor().execute {
             val result = runCatching {
@@ -130,6 +155,7 @@ class MainActivity : ComponentActivity() {
                     connection.readTimeout = 30_000
                     connection.doOutput = true
                     connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
+                    accessToken?.let { connection.setRequestProperty("Authorization", "Bearer $it") }
                     val body = chatPayload(ChatCommand(message, privateMode))
                     connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
                     if (connection.responseCode !in 200..299) error("HTTP ${connection.responseCode}")
@@ -145,9 +171,12 @@ class MainActivity : ComponentActivity() {
 
 @androidx.compose.runtime.Composable
 private fun LzAgentScreen(
+    authenticate: (String, String, (Result<Unit>) -> Unit) -> Unit,
     send: (String, Boolean, (Result<String>) -> Unit) -> Unit,
     listen: ((Result<String>) -> Unit) -> Unit,
 ) {
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("") }
     var privateMode by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
@@ -161,6 +190,39 @@ private fun LzAgentScreen(
             ) {
                 Text("LZ Agent", style = MaterialTheme.typography.headlineLarge, modifier = Modifier.semantics { heading() })
                 Text("Agente pessoal local, acessível e auditável")
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Usuário") },
+                    singleLine = true,
+                    enabled = !busy,
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Senha") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    enabled = !busy,
+                )
+                Button(
+                    enabled = !busy && username.isNotBlank() && password.isNotEmpty(),
+                    onClick = {
+                        busy = true
+                        response = "Autenticando…"
+                        authenticate(username.trim(), password) { result ->
+                            busy = false
+                            result.onSuccess {
+                                password = ""
+                                response = "Login concluído para esta sessão do aplicativo."
+                            }.onFailure {
+                                response = "Não foi possível entrar. Verifique usuário, senha e núcleo local."
+                            }
+                        }
+                    },
+                ) { Text("Entrar") }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("Modo privado")
                     Switch(checked = privateMode, onCheckedChange = { privateMode = it })

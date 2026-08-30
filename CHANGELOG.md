@@ -25,3 +25,5 @@
 - Reconhecimento de fala Android com permissão em tempo de execução, locale do aparelho e fallback textual.
 - Proteção automática de rotas pessoais após bootstrap da primeira conta e manifesto de proveniência.
 - PWA instalável, com cache restrito ao shell e sem cache das APIs pessoais.
+- Login e token Bearer nos clientes Windows, Android e Linux.
+- Avatar 3D original gerado por código: `.blend`, três GLBs, rig, 13 clips, preview e controlador de estados.

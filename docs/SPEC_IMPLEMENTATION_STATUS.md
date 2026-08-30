@@ -6,9 +6,9 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Requisito do documento | Estado | Evidência atual | Próximo critério de conclusão |
 |---|---|---|---|
 | Núcleo separado das interfaces | Parcial funcional | FastAPI, serviços, políticas e clientes HTTP separados | autenticação IPC e execução de tarefas longa |
-| Windows WinUI 3 | Parcial funcional | build x64 e fluxo de chat acessível | notificações, deep links, tray, ARM64 e empacotamento assinado |
-| Android Compose | Parcial funcional | build CLI/VS Code, APK, lint e testes | UI adaptativa, instrumentação TalkBack/Switch Access e release assinada |
-| Linux Flutter | Parcial funcional | análise e testes de widget | build em Linux, Portals, Flatpak e matriz Wayland/X11 |
+| Windows WinUI 3 | Parcial funcional | build x64, login e chat autenticado acessível | notificações, deep links, tray, ARM64 e MSIX assinado |
+| Android Compose | Parcial funcional | build CLI/VS Code, login, chat, fala opt-in, lint e APK | UI adaptativa, instrumentação TalkBack/Switch Access e assinatura |
+| Linux Flutter | Parcial funcional | login/chat, análise e testes de widget; build Linux na CI | Portals, Flatpak e matriz Wayland/X11 |
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
 | Memória por projeto | Parcial funcional | projetos, lições, sugestões, exportação, exclusão, backup e restauração SQLite verificados | edição, busca e retenção configurável |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
@@ -22,14 +22,14 @@ Atualizado em 29/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Plugins | Controle parcial funcional | esquema, quatro manifestos, estado e grants persistentes com confirmação | runtime isolado, timeout e contratos I/O |
 | Perfis Lite/Standard/Pro | Detecção parcial | diagnóstico básico de hardware | roteamento de capacidades e testes em hardware-alvo |
 | Acessibilidade combinável | Parcial | semântica/foco/teclado/live regions iniciais | auditorias manuais e automáticas por plataforma e perfis persistentes |
-| Avatar 2D/3D | Inicial | identidade SVG/PNG/ICO e fallback estático | concept final, Blender, rig, estados, GLB e LOD |
+| Avatar 2D/3D | Parcial funcional | `.blend` mestre, três GLBs, 32 ossos, 13 clips, preview e API de estados | integrar renderer nos clientes, revisar deformações/gestos e otimizar em aparelhos reais |
 | Segurança e privacidade | Parcial | políticas, modo privado, exclusão, docs e segredos ignorados | cofre do SO, sandbox, threat tests, assinatura e SBOM |
-| Cadastro e login | Parcial funcional | conta local, Argon2id e proteção das rotas pessoais após bootstrap | login nativo, recuperação e cofre do SO |
+| Cadastro e login | Parcial funcional | conta local, Argon2id, rotas protegidas e login nos três clientes nativos | recuperação, persistência no cofre do SO e testes de dispositivo |
 | Dispositivo e sistema | Parcial funcional | tipo, SO/versão, arquitetura, CPU e nome opt-in | registro consentido entre dispositivos e matriz por hardware |
 | Microfone e fala | Parcial funcional | entradas no núcleo, ditado web e reconhecimento Android opt-in com fallback | STT local consistente em Windows/Linux e testes multilíngues |
 | Sincronização PostgreSQL | Planejado | contrato e política desativada | protocolo E2EE/autenticado, conflitos e consentimento |
 | Instaladores e atualização | Planejado | workflows e builds de desenvolvimento | MSIX/APK/Flatpak assinados, atualização, rollback e teste limpo |
-| Releases GitHub | Preparado localmente | commits, tag inicial e workflows | autenticar GitHub, executar CI e publicar artefatos validados |
+| Releases GitHub | Parcial funcional | repositório, CI e pré-releases com Windows/Android/Linux/Python/fontes | assinatura, SBOM, checksums destacados e promoção estável |
 | Conformidade mundial | Processo parcial | matriz inicial Brasil/SP, UE, Reino Unido e EUA | revisão jurídica por país/estado/setor antes de declarar suporte |
 | Série de vídeos | Planejado | estrutura descrita no PDF | roteiros, gravação, legendas e release reproduzível por episódio |
 | Unity/Unreal/Godot por código | Política definida | fontes/configurações versionadas e builds headless/CLI obrigatórios | runners isolados e projetos reais testados em CI por motor |
