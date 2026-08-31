@@ -18,6 +18,7 @@ from lz_agent.localization import (
 from lz_agent.plugins import PluginRegistry, PluginValidationError, load_manifest
 from lz_agent.policies import PolicyEngine, Risk
 from lz_agent.providers import NativeAgentProvider
+from lz_agent.voice_commands import VoiceCommandInterpreter
 from lz_agent.web_research import ResearchError, _validate_public_url
 from PIL import Image
 
@@ -104,6 +105,43 @@ def test_prepare_command_api_audits_properties_and_approval(tmp_path: Path) -> N
         assert ready["properties"]["executable"] is True
         action = client.get(f"/api/v1/actions/{ready['action_id']}").json()
         assert action["tool"] == "agent.commands.prepare"
+
+
+def test_voice_commands_cover_languages_properties_and_safe_review() -> None:
+    interpreter = VoiceCommandInterpreter()
+    research = interpreter.interpret("Pesquise acessibilidade na internet", locale="pt-BR")
+    assert research.canonical_command == "Pesquisar na internet acessibilidade na internet"
+    assert research.extracted_properties["query"] == "acessibilidade na internet"
+    assert research.command_properties["intent"] == "research"
+    assert research.review_required
+    assert not research.command_properties["executable"]
+
+    delete = interpreter.interpret("Delete old report", locale="en", approved=True)
+    assert delete.extracted_properties["target"] == "old report"
+    assert delete.command_properties["intent"] == "delete"
+    assert delete.command_properties["executable"]
+
+    accessibility = interpreter.interpret("Reducir animaciones", locale="es")
+    assert accessibility.command_properties["intent"] == "accessibility"
+    assert accessibility.command_properties["permission"] == "accessibility.settings"
+
+
+def test_voice_command_api_does_not_retain_raw_transcript_in_ledger(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root, data_dir=tmp_path, database=tmp_path / "test.db", config=base.config
+    )
+    with TestClient(create_app(settings)) as client:
+        response = client.post(
+            "/api/v1/voice/commands/interpret",
+            json={"transcript": "Abra o calendário", "locale": "pt-BR"},
+        )
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["extracted_properties"]["target"] == "o calendario"
+        action = client.get(f"/api/v1/actions/{payload['action_id']}").json()
+        assert action["parameters"]["transcript_retained"] is False
+        assert "calendário" not in json.dumps(action, ensure_ascii=False)
 
 
 def test_locale_normalization_fallback_and_direction() -> None:

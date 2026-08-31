@@ -76,6 +76,22 @@ class CommandPlanner:
             return "research", Risk.EXTERNAL, "network.research", ("network",), ("query",)
         if any(word in command for word in ("microfone", "ouvir", "gravar voz", "reconhecer voz")):
             return "audio", Risk.SENSITIVE, "microphone.use", ("microphone",), ()
+        if any(word in command for word in ("enviar mensagem", "fazer chamada")):
+            return "communicate", Risk.EXTERNAL, "communications.send", ("communications",), (
+                "target",
+            )
+        if any(word in command for word in ("abrir", "fechar")):
+            return "application", Risk.WRITE, "applications.control", ("applications",), (
+                "target",
+            )
+        if any(word in command for word in ("volume", "pausar mídia", "reproduzir mídia")):
+            return "media", Risk.WRITE, "media.control", ("audio.output",), ()
+        if any(word in command for word in ("leitor de tela", "reduzir animações")):
+            return "accessibility", Risk.WRITE, "accessibility.settings", (
+                "accessibility",
+            ), ()
+        if "criar lembrete" in command:
+            return "reminder", Risk.WRITE, "reminders.write", ("notifications",), ("target",)
         if any(word in command for word in ("criar", "editar", "alterar", "salvar", "escrever")):
             return "write", Risk.WRITE, "data.write", ("storage",), ("target",)
         return "answer", Risk.READ, "data.read", ("text",), ()

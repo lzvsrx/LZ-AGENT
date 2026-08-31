@@ -42,7 +42,10 @@ class VoiceCommandInterpreter:
 
     INTENTS = (
         (
-            ("pesquisar", "buscar", "procure", "search", "find", "buscar en internet"),
+            (
+                "pesquisar", "pesquise", "buscar", "busque", "procure", "search", "find",
+                "buscar en internet",
+            ),
             "Pesquisar na internet",
             "query",
         ),
