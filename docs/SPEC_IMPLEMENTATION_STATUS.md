@@ -43,6 +43,33 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 5. Adicionar STT/TTS e visão por capacidade verificada, sempre com fallback textual.
 6. Somente então ampliar automação, sincronização, avatar 3D e catálogo de profissões.
 
+## Linguagens e tecnologias: lacunas para uma versão estável
+
+O Documento Mestre afirma que “usar todas as linguagens” não é uma meta. A versão 1.0 deve usar cada
+linguagem somente onde ela reduz risco ou fornece integração nativa. O repositório já contém Python
+(núcleo/API), C#/XAML (Windows), Kotlin/Compose (Android), Dart/Flutter/C++ do runner (Linux),
+TypeScript/JavaScript/HTML/CSS (web), SQL (persistência), PowerShell e YAML (automação/release), além
+de Python/Blender e glTF para o avatar.
+
+| Tecnologia citada no documento | Situação real | Decisão para 1.0 |
+|---|---|---|
+| Rust | não implementado | não é bloqueador; adotar somente após benchmark e revisão de segurança demonstrarem necessidade em sandbox, multimídia ou inferência |
+| C++ próprio | apenas código gerado/runner Flutter | não adicionar por paridade nominal; manter isolado às integrações nativas que realmente exigirem ABI C/C++ |
+| PostgreSQL | contrato planejado; sem implementação operacional | não bloquear a edição local 1.0; necessário apenas antes de anunciar sincronização multi-dispositivo |
+| STT/TTS nativo multiplataforma | parcial | bloqueia anunciar voz completa; implementar adaptadores por sistema, consentimento, fallback textual e testes por locale |
+| Criptografia/cofre por sistema | parcial | bloqueia versão estável: Windows Credential Locker/DPAPI, Android Keystore e Secret Service/libsecret no Linux |
+| Instaladores e atualização assinados | parcial | bloqueia versão estável: MSIX/APK/Flatpak assinados, atualização, rollback e instalação limpa testada |
+| SBOM nativo e proveniência | parcial | bloqueia promoção estável: SBOM de Python, .NET, Android e Flutter, checksums e artefatos vinculados ao commit/tag |
+
+### Gates obrigatórios de promoção
+
+- **Beta:** fluxo login → conversa → aprovação → auditoria passa em Windows, Android e Linux; testes de acessibilidade e dispositivos reais documentados; nenhuma vulnerabilidade crítica/alta aberta.
+- **Release candidate:** instaladores assinados e atualizáveis, migração/rollback testados, recuperação de conta e segredos no cofre do sistema, matriz de privacidade e licenças aprovada.
+- **1.0 estável:** todos os gates anteriores repetíveis em CI, teste de instalação limpa e atualização da versão anterior, suporte e política de vulnerabilidades operacionais, revisão jurídica dos mercados efetivamente anunciados.
+
+Adicionar Rust, Swift, mais C++ ou qualquer outra linguagem sem um requisito testável aumenta a
+superfície de ataque e manutenção e não aproxima o produto da versão final.
+
 ## Regras de honestidade de release
 
 - Nenhuma plataforma é “suportada” só porque compilou.
