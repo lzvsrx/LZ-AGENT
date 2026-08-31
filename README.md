@@ -60,7 +60,7 @@ Agent adota o caminho oposto:
 | Web/PWA multiplataforma | funcional inicial | manifest instalável e shell offline sem cache de APIs/dados pessoais |
 | Windows WinUI 3 | compila e acessa a API | build x64 com 0 erros/avisos |
 | Android Compose | cliente inicial funcional | build nativo por CLI/VS Code, testes e lint; Android Studio não é necessário |
-| Linux/Flutter/Flatpak | cliente Flutter funcional inicial | análise e testes de widgets passam; pacote Flatpak pendente |
+| Linux/Flutter/Flatpak | cliente e empacotamento automatizados | análise/testes, tar.gz e Flatpak validados na release; teste em distros reais pendente |
 | Avatar 2D/3D | funcional inicial | `.blend`, GLB Lite/Standard/Pro, rig mecânico, 13 clips e controlador de estado |
 | Releases | automação preparada | CI e workflow de tag; publicação depende de autenticação GitHub |
 

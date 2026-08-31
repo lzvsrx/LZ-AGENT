@@ -30,3 +30,5 @@
 - Edição e busca de memória por projeto, políticas de retenção e expurgo confirmado/auditado.
 - Runner de plugins com aprovação, grants, contrato JSON, limites, timeout e auditoria de falhas.
 - Sandbox de plugins fail-closed: integridade SHA-256, Bubblewrap forte no Linux, rede negada e bloqueio seguro no Windows até LPAC assinado.
+- Release Linux com Flatpak Freedesktop 25.08, validação de bundle, checksums e artefato de recuperação.
+- Checksums por plataforma e SBOM CycloneDX das dependências Python nas releases.

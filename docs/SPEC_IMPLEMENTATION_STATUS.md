@@ -8,7 +8,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Núcleo separado das interfaces | Parcial funcional | FastAPI, serviços, políticas e clientes HTTP separados | autenticação IPC e execução de tarefas longa |
 | Windows WinUI 3 | Parcial funcional | build x64, login e chat autenticado acessível | notificações, deep links, tray, ARM64 e MSIX assinado |
 | Android Compose | Parcial funcional | build CLI/VS Code, login, chat, fala opt-in, lint e APK | UI adaptativa, instrumentação TalkBack/Switch Access e assinatura |
-| Linux Flutter | Parcial funcional | login/chat, análise e testes de widget; build Linux na CI | Portals, Flatpak e matriz Wayland/X11 |
+| Linux Flutter | Parcial funcional | login/chat, análise/widget tests, tar.gz e manifesto/build Flatpak 25.08 na CI | Portals nativos e matriz real Wayland/X11/distribuições |
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
 | Memória por projeto | Parcial funcional | projetos/lições editáveis, busca por texto/escopo, retenção do ledger, expurgo confirmado, sugestões, exportação, exclusão, backup e restauração SQLite verificados | fontes/artefatos editáveis, criptografia por plataforma e retenção por projeto/sessão |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
@@ -29,7 +29,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Microfone e fala | Parcial funcional | entradas no núcleo, ditado web e reconhecimento Android opt-in com fallback | STT local consistente em Windows/Linux e testes multilíngues |
 | Sincronização PostgreSQL | Planejado | contrato e política desativada | protocolo E2EE/autenticado, conflitos e consentimento |
 | Instaladores e atualização | Planejado | workflows e builds de desenvolvimento | MSIX/APK/Flatpak assinados, atualização, rollback e teste limpo |
-| Releases GitHub | Parcial funcional | repositório, CI e pré-releases com Windows/Android/Linux/Python/fontes | assinatura, SBOM, checksums destacados e promoção estável |
+| Releases GitHub | Parcial funcional | CI e pré-releases com Windows/Android/Linux/Python/fontes, SHA-256 e SBOM Python CycloneDX | assinatura com identidade protegida, SBOMs nativos e promoção estável |
 | Conformidade mundial | Processo parcial | matriz inicial Brasil/SP, UE, Reino Unido e EUA | revisão jurídica por país/estado/setor antes de declarar suporte |
 | Série de vídeos | Planejado | estrutura descrita no PDF | roteiros, gravação, legendas e release reproduzível por episódio |
 | Unity/Unreal/Godot por código | Política definida | fontes/configurações versionadas e builds headless/CLI obrigatórios | runners isolados e projetos reais testados em CI por motor |
