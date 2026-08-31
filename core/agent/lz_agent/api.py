@@ -15,6 +15,7 @@ from .auth import AuthenticationError, AuthService
 from .avatar import AvatarController, AvatarState
 from .capabilities import AudioCapabilityRegistry, runtime_diagnostics
 from .checkpoints import CheckpointError, GitCheckpointService
+from .command_planner import CommandPlanner
 from .config import Settings
 from .database import Database
 from .devices import DeviceDetector
@@ -29,6 +30,13 @@ from .web_research import ResearchError, fetch_public_text, wikipedia_search
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=20_000)
     private: bool = False
+
+
+class PrepareCommandRequest(BaseModel):
+    command: str = Field(min_length=1, max_length=20_000)
+    properties: dict = Field(default_factory=dict)
+    approved: bool = False
+    autonomy_level: int = Field(default=2, ge=0, le=4)
 
 
 class ProjectRequest(BaseModel):
@@ -141,6 +149,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     service = AgentService(database, NativeAgentProvider())
     auth = AuthService(database)
     audio_capabilities = AudioCapabilityRegistry()
+    command_planner = CommandPlanner()
     translator = Translator(settings.root / "shared" / "localization")
     plugins = PluginRegistry(settings.root / "plugins")
     plugin_runner = PluginRunner()
@@ -486,6 +495,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except Exception:
             avatar.update(AvatarState.ERROR)
             raise
+
+    @app.post("/api/v1/commands/prepare")
+    def prepare_command(request: PrepareCommandRequest) -> dict:
+        properties = command_planner.prepare(
+            request.command,
+            supplied=request.properties,
+            approved=request.approved,
+            autonomy_level=request.autonomy_level,
+        ).as_dict()
+        action = database.record_action(
+            request.command,
+            "agent.commands.prepare",
+            "ready" if properties["executable"] else "needs_input",
+            parameters={"supplied_properties": sorted(request.properties)},
+            result=properties,
+            permission=properties["permission"],
+        )
+        return {"command": request.command, "properties": properties, "action_id": action["id"]}
 
     @app.get("/api/v1/actions")
     def actions(limit: int = Query(50, ge=1, le=500)) -> list[dict]:
