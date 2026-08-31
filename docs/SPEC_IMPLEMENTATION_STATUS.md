@@ -5,7 +5,7 @@ Atualizado em 31/08/2026. Esta matriz compara o PDF canônico com código, teste
 
 | Requisito do documento | Estado | Evidência atual | Próximo critério de conclusão |
 |---|---|---|---|
-| Núcleo separado das interfaces | Parcial funcional | FastAPI, serviços, políticas e clientes HTTP separados | autenticação IPC e execução de tarefas longa |
+| Núcleo separado das interfaces | Parcial funcional | FastAPI, serviços, políticas, clientes HTTP e preparação de comandos com propriedades/risco/aprovação separados | autenticação IPC e execução persistente de tarefas longas |
 | Windows WinUI 3 | Parcial funcional | build x64, login e chat autenticado acessível | notificações, deep links, tray, ARM64 e MSIX assinado |
 | Android Compose | Parcial funcional | build CLI/VS Code, login, chat, fala opt-in, lint e APK | UI adaptativa, instrumentação TalkBack/Switch Access e assinatura |
 | Linux Flutter | Parcial funcional | login/chat, análise/widget tests, tar.gz e manifesto/build Flatpak 25.08 na CI | Portals nativos e matriz real Wayland/X11/distribuições |

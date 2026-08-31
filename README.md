@@ -107,6 +107,15 @@ generativos próprios treinados, portanto o programa declara essa limitação e 
 resposta de modelo que não aconteceu. Treinamento futuro exige corpus licenciado, avaliações e pesos
 reproduzíveis e assinados.
 
+### Preparação segura de comandos
+
+`POST /api/v1/commands/prepare` transforma um comando em propriedades verificáveis antes da
+execução: intenção, risco, permissão, capacidades, entradas ausentes, padrões seguros, necessidade de
+aprovação, possibilidade de execução e fallback. O núcleo pode gerar somente padrões não sensíveis
+(`locale`, modo privado, timeout limitado e auditoria). Alvos, consultas e permissões nunca são
+inventados. Exclusão, internet e microfone permanecem bloqueados até consentimento explícito. Cada
+preparação é registrada no Action Ledger.
+
 ## Internet e pesquisa
 
 Pesquisa é separada da IA e não libera acesso arbitrário. `POST /api/v1/research/search` consulta uma

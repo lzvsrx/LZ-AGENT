@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from lz_agent.api import create_app
 from lz_agent.avatar import AvatarController, AvatarState
 from lz_agent.capabilities import AudioCapabilityRegistry
+from lz_agent.command_planner import CommandPlanner
 from lz_agent.config import Settings
 from lz_agent.localization import (
     AudioCapability,
@@ -59,6 +60,50 @@ def test_sensitive_actions_always_require_explicit_approval() -> None:
     engine = PolicyEngine()
     assert engine.decide(Risk.DESTRUCTIVE, autonomy_level=4).requires_approval
     assert engine.decide(Risk.DESTRUCTIVE, autonomy_level=4, approved=True).allowed
+
+
+def test_command_planner_creates_safe_properties_without_inventing_access() -> None:
+    planner = CommandPlanner()
+    incomplete = planner.prepare("Apagar o arquivo")
+    assert incomplete.intent == "delete"
+    assert incomplete.required_inputs == ("target",)
+    assert incomplete.requires_approval
+    assert not incomplete.executable
+
+    ready = planner.prepare(
+        "Apagar o arquivo",
+        supplied={"target": "rascunho.txt", "locale": "pt-BR", "timeout_seconds": 999},
+        approved=True,
+    )
+    assert ready.executable
+    assert ready.generated_defaults["timeout_seconds"] == 300
+    assert ready.generated_defaults["audit"] is True
+
+
+def test_prepare_command_api_audits_properties_and_approval(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root, data_dir=tmp_path, database=tmp_path / "test.db", config=base.config
+    )
+    with TestClient(create_app(settings)) as client:
+        blocked = client.post(
+            "/api/v1/commands/prepare",
+            json={"command": "Pesquisar na internet", "properties": {"query": "LZ Agent"}},
+        ).json()
+        assert blocked["properties"]["permission"] == "network.research"
+        assert blocked["properties"]["requires_approval"] is True
+        assert blocked["properties"]["executable"] is False
+        ready = client.post(
+            "/api/v1/commands/prepare",
+            json={
+                "command": "Pesquisar na internet",
+                "properties": {"query": "LZ Agent"},
+                "approved": True,
+            },
+        ).json()
+        assert ready["properties"]["executable"] is True
+        action = client.get(f"/api/v1/actions/{ready['action_id']}").json()
+        assert action["tool"] == "agent.commands.prepare"
 
 
 def test_locale_normalization_fallback_and_direction() -> None:
