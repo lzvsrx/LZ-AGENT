@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+      - run: sudo apt-get update && sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev flatpak flatpak-builder
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.47.0"
@@ -69,11 +69,18 @@ jobs:
           cache: true
       - working-directory: apps/linux
         run: flutter analyze && flutter test && flutter build linux --release
+      - name: Build and validate Flatpak
+        run: |
+          flatpak remote-add --if-not-exists --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak-builder --force-clean --user --install-deps-from=flathub --repo=flatpak-repo flatpak-build packaging/linux/dev.lzagent.LzAgent.yml
+          flatpak build-bundle flatpak-repo lz-agent-${{ github.ref_name }}-linux-x64.flatpak dev.lzagent.LzAgent --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak build-import-bundle --ref=app/dev.lzagent.LzAgent/x86_64/master flatpak-verify lz-agent-${{ github.ref_name }}-linux-x64.flatpak
       - name: Package Linux alpha
         run: |
           test -x apps/linux/build/linux/x64/release/bundle/lz_agent_linux
           tar -C apps/linux/build/linux/x64/release/bundle -czf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz .
           sha256sum lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz > lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
+          sha256sum lz-agent-${{ github.ref_name }}-linux-x64.flatpak > lz-agent-${{ github.ref_name }}-linux-x64.flatpak.sha256
           tar -tzf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz >/dev/null
       - uses: actions/upload-artifact@v4
         with:
@@ -81,9 +88,13 @@ jobs:
           path: |
             lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz
             lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
+            lz-agent-${{ github.ref_name }}-linux-x64.flatpak
+            lz-agent-${{ github.ref_name }}-linux-x64.flatpak.sha256
       - uses: softprops/action-gh-release@v2
         with:
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz
             lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
+            lz-agent-${{ github.ref_name }}-linux-x64.flatpak
+            lz-agent-${{ github.ref_name }}-linux-x64.flatpak.sha256

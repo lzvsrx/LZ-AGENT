@@ -1,0 +1,32 @@
+id: dev.lzagent.LzAgent
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: lz_agent_linux
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+modules:
+  - name: lz-agent
+    buildsystem: simple
+    build-commands:
+      - mkdir -p /app/lib/lz-agent /app/bin
+      - cp -a bundle/. /app/lib/lz-agent/
+      - ln -s /app/lib/lz-agent/lz_agent_linux /app/bin/lz_agent_linux
+      - install -Dm644 dev.lzagent.LzAgent.desktop /app/share/applications/dev.lzagent.LzAgent.desktop
+      - install -Dm644 dev.lzagent.LzAgent.metainfo.xml /app/share/metainfo/dev.lzagent.LzAgent.metainfo.xml
+      - install -Dm644 dev.lzagent.LzAgent.png /app/share/icons/hicolor/1024x1024/apps/dev.lzagent.LzAgent.png
+    sources:
+      - type: dir
+        path: ../../apps/linux/build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: dev.lzagent.LzAgent.desktop
+      - type: file
+        path: dev.lzagent.LzAgent.metainfo.xml
+      - type: file
+        path: ../../assets/brand/lz-agent-icon-1024.png
+        dest-filename: dev.lzagent.LzAgent.png

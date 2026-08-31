@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=LZ Agent
+Comment=Agente pessoal acessível e orientado a tarefas
+Exec=lz_agent_linux
+Icon=dev.lzagent.LzAgent
+Terminal=false
+Categories=Utility;Accessibility;
+Keywords=agent;assistant;accessibility;

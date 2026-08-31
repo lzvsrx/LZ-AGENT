@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>dev.lzagent.LzAgent</id>
+  <name>LZ Agent</name>
+  <summary>Agente pessoal acessível e orientado a tarefas</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <description>
+    <p>Cliente Linux alfa do LZ Agent para conversar com o núcleo local autorizado.</p>
+  </description>
+  <launchable type="desktop-id">dev.lzagent.LzAgent.desktop</launchable>
+  <content_rating type="oars-1.1"/>
+  <releases>
+    <release version="0.1.0-alpha" date="2026-08-31"/>
+  </releases>
+</component>
