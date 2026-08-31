@@ -26,7 +26,7 @@ Atualizado em 31/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Segurança e privacidade | Parcial | políticas, modo privado, exclusão, docs e segredos ignorados | cofre do SO, sandbox, threat tests, assinatura e SBOM |
 | Cadastro e login | Parcial funcional | conta local, Argon2id, rotas protegidas e login nos três clientes nativos | recuperação, persistência no cofre do SO e testes de dispositivo |
 | Dispositivo e sistema | Parcial funcional | tipo, SO/versão, arquitetura, CPU e nome opt-in | registro consentido entre dispositivos e matriz por hardware |
-| Microfone e fala | Parcial funcional | entradas no núcleo, ditado web e reconhecimento Android opt-in com fallback | STT local consistente em Windows/Linux e testes multilíngues |
+| Microfone e fala | Parcial funcional | entradas no núcleo, ditado web e Android opt-in; interpretação revisável de pesquisa, apps, arquivos, comunicação, lembretes, mídia e acessibilidade em pt/en/es sem reter transcrição | STT local consistente em Windows/Linux, ampliar locales com revisão humana e integrar execução por capacidade |
 | Sincronização PostgreSQL | Planejado | contrato e política desativada | protocolo E2EE/autenticado, conflitos e consentimento |
 | Instaladores e atualização | Planejado | workflows e builds de desenvolvimento | MSIX/APK/Flatpak assinados, atualização, rollback e teste limpo |
 | Releases GitHub | Parcial funcional | CI e pré-releases com Windows/Android/Linux/Python/fontes, SHA-256 e SBOM Python CycloneDX | assinatura com identidade protegida, SBOMs nativos e promoção estável |

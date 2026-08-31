@@ -146,6 +146,14 @@ Na interface web, **Usar microfone** inicia ditado somente após ação explíci
 reconhecimento do navegador preenche o campo de texto; ele pode usar o serviço de fala configurado
 pelo próprio navegador. Identificação biométrica do falante não é realizada nem usada como senha.
 
+`POST /api/v1/voice/commands/interpret` converte uma transcrição já autorizada em comando revisável.
+O interpretador aceita variações em português, inglês e espanhol para pesquisa, aplicativos,
+arquivos, leitura, mensagens, chamadas, lembretes, mídia, volume e acessibilidade. Ele normaliza
+acentos, extrai consulta/alvo, calcula confiança e usa o mesmo planejamento de risco e permissões.
+A transcrição bruta não é persistida no Action Ledger, e comandos ambíguos ou sensíveis exigem
+revisão/aprovação antes de qualquer execução. Outros idiomas continuam aceitos como texto, sem
+promessa de intenção verificada até receberem testes e revisão humana.
+
 ## Cliente Windows
 
 O projeto [`apps/windows/LzAgent.Windows.csproj`](apps/windows/LzAgent.Windows.csproj) usa WinUI 3 e
@@ -371,6 +379,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\safe-github-sync.ps1
 
 `.env`, bancos, backups, certificados, toolchains, caches e builds continuam deliberadamente fora do
 GitHub. Releases são produzidas por tags e CI; não se usa a pasta `build` local como fonte de release.
+Atualizações de código entram automaticamente apenas quando Ruff, testes Python e validação
+JavaScript passam; nomes/conteúdo com aparência de segredo e arquivos grandes são bloqueados. A
+automação não promove dependências nem cria release estável sem os gates e aprovações correspondentes.
 
 ## Contribuição
 
