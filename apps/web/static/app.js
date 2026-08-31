@@ -2,11 +2,19 @@ const $=s=>document.querySelector(s);const $$=s=>document.querySelectorAll(s);
 const avatarStage=()=>$('#avatar-stage');
 function setAvatarState(state,label){avatarStage().dataset.state=state;$('#state').textContent=label;$('#avatar').alt=`Robô LZ Agent: ${label.toLocaleLowerCase('pt-BR')}`}
 let availableVoices=[];
-function loadVoices(){availableVoices=speechSynthesis.getVoices();const select=$('#speech-voice');const previous=select.value;select.innerHTML='<option value="">Voz compatível automática</option>';availableVoices.filter(v=>v.lang.toLowerCase().startsWith(document.documentElement.lang.split('-')[0].toLowerCase())).forEach(v=>{const option=document.createElement('option');option.value=v.voiceURI;option.textContent=`${v.name} (${v.lang})${v.localService?' — local':''}`;select.append(option)});select.value=previous}
+function loadVoices(){availableVoices=speechSynthesis.getVoices();const select=$('#speech-voice');const previous=localStorage.getItem('lz-speech-voice')||select.value;select.innerHTML='<option value="">Voz compatível automática</option>';availableVoices.filter(v=>v.lang.toLowerCase().startsWith(document.documentElement.lang.split('-')[0].toLowerCase())).forEach(v=>{const option=document.createElement('option');option.value=v.voiceURI;option.textContent=`${v.name} (${v.lang})${v.localService?' — local':''}`;select.append(option)});select.value=availableVoices.some(v=>v.voiceURI===previous)?previous:''}
 function speakResponse(text){if(!('speechSynthesis' in window)||!$('#speak-response').checked||!text)return;speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(text);utterance.lang=document.documentElement.lang;utterance.rate=Number($('#speech-rate').value);const selected=availableVoices.find(v=>v.voiceURI===$('#speech-voice').value);const compatible=availableVoices.find(v=>v.lang.toLowerCase().startsWith(utterance.lang.split('-')[0].toLowerCase()));utterance.voice=selected||compatible||null;utterance.onstart=()=>setAvatarState('speaking','Falando');utterance.onend=()=>setAvatarState('success','Concluído');utterance.onerror=()=>setAvatarState('error','Erro de voz');speechSynthesis.speak(utterance)}
 if('speechSynthesis' in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
 $('#stop-speaking').addEventListener('click',()=>{speechSynthesis.cancel();setAvatarState('idle','Pronto')});
-$('#speech-rate').addEventListener('input',e=>e.currentTarget.setAttribute('aria-valuetext',`${e.currentTarget.value} vezes`));
+$('#speech-voice').addEventListener('change',e=>localStorage.setItem('lz-speech-voice',e.currentTarget.value));
+$('#speech-rate').value=localStorage.getItem('lz-speech-rate')||'1';
+$('#speech-rate').addEventListener('input',e=>{e.currentTarget.setAttribute('aria-valuetext',`${e.currentTarget.value} vezes`);localStorage.setItem('lz-speech-rate',e.currentTarget.value)});
+$('#speak-response').checked=localStorage.getItem('lz-speak-response')!=='false';
+$('#speak-response').addEventListener('change',e=>localStorage.setItem('lz-speak-response',String(e.currentTarget.checked)));
+async function audioOutputs(){const status=$('#audio-output-status');if(!navigator.mediaDevices?.enumerateDevices){status.textContent='O navegador usa a saída padrão do sistema; enumeração indisponível.';return}try{const devices=await navigator.mediaDevices.enumerateDevices();const outputs=devices.filter(d=>d.kind==='audiooutput');const names=outputs.map((d,i)=>d.label||`Saída ${i+1}`);status.textContent=names.length?`Saída controlada pelo sistema: ${names.join(', ')}. Troque o padrão nas configurações do dispositivo.`:'A fala seguirá automaticamente o fone ou caixa definidos como saída padrão do sistema.'}catch(error){status.textContent=`A fala usa a saída padrão do sistema. Não foi possível listar dispositivos: ${error.name}`}}
+$('#refresh-audio-output').addEventListener('click',audioOutputs);
+if(navigator.mediaDevices){navigator.mediaDevices.addEventListener?.('devicechange',audioOutputs)}
+audioOutputs();
 async function health(){const r=await fetch('/api/v1/system/health');$('#health').textContent=JSON.stringify(await r.json(),null,2)}
 const token=()=>sessionStorage.getItem('lz-token');
 function authHeaders(headers={}){return token()?{...headers,Authorization:`Bearer ${token()}`}:{...headers}}

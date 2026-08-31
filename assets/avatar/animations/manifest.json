@@ -3,5 +3,22 @@
   "fps": 30,
   "clips": ["Idle_1", "Idle_2", "Idle_3", "Listening", "Thinking", "Speaking", "Acting", "Needs_Approval", "Success", "Warning", "Error", "Offline", "Private"],
   "reduced_motion_clip": "Static",
-  "facial_controls": ["EyesControl", "MouthControl", "LightsControl"]
+  "facial_controls": ["EyesControl", "MouthControl", "LightsControl"],
+  "web_2d": {
+    "asset": "../references/generated-preview-transparent.png",
+    "state_mapping": {
+      "IDLE": "Idle_1",
+      "LISTENING": "Listening",
+      "THINKING": "Thinking",
+      "SPEAKING": "Speaking",
+      "ACTING": "Acting",
+      "NEEDS_APPROVAL": "Needs_Approval",
+      "SUCCESS": "Success",
+      "WARNING": "Warning",
+      "ERROR": "Error",
+      "OFFLINE": "Offline",
+      "PRIVATE": "Private"
+    },
+    "reduced_motion": "Static"
+  }
 }
