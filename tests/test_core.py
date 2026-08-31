@@ -652,6 +652,23 @@ def test_avatar_glbs_have_three_lods_and_official_animations() -> None:
     assert triangle_counts == sorted(triangle_counts)
 
 
+def test_web_avatar_preview_is_served_from_official_generated_asset(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root, data_dir=tmp_path, database=tmp_path / "test.db", config=base.config
+    )
+    with TestClient(create_app(settings)) as client:
+        response = client.get("/avatar-preview.png")
+        assert response.status_code == 200
+        assert response.headers["content-type"] == "image/png"
+        assert response.content == (
+            base.root / "assets" / "avatar" / "references" / "generated-preview.png"
+        ).read_bytes()
+        home = client.get("/").text
+        assert 'src="/avatar-preview.png"' in home
+        assert 'id="speech-voice"' in home
+
+
 def test_project_sources_artifacts_are_editable_and_confirmed(tmp_path: Path) -> None:
     base = Settings.load()
     settings = Settings(

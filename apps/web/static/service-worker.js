@@ -1,5 +1,5 @@
-const CACHE = 'lz-agent-shell-v1';
-const SHELL = ['/', '/static/app.css', '/static/app.js', '/static/logo.svg', '/static/manifest.webmanifest'];
+const CACHE = 'lz-agent-shell-v2';
+const SHELL = ['/', '/avatar-preview.png', '/static/app.css', '/static/app.js', '/static/logo.svg', '/static/manifest.webmanifest'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)));
