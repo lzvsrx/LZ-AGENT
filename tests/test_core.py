@@ -567,3 +567,54 @@ def test_avatar_glbs_have_three_lods_and_official_animations() -> None:
         )
         triangle_counts.append(triangles)
     assert triangle_counts == sorted(triangle_counts)
+
+
+def test_project_sources_artifacts_are_editable_and_confirmed(tmp_path: Path) -> None:
+    base = Settings.load()
+    settings = Settings(
+        root=base.root,
+        data_dir=tmp_path,
+        database=tmp_path / "test.db",
+        config=base.config,
+    )
+    with TestClient(create_app(settings)) as client:
+        project = client.post("/api/v1/projects", json={"name": "Memória completa"}).json()
+        artifact = client.post(
+            f"/api/v1/projects/{project['id']}/artifacts",
+            json={"kind": "document", "path": "docs/rascunho.md", "checksum": "sha256:teste",
+                  "metadata": {"format": "markdown"}},
+        )
+        assert artifact.status_code == 201
+        artifact_id = artifact.json()["id"]
+        edited_artifact = client.put(
+            f"/api/v1/artifacts/{artifact_id}",
+            json={"kind": "document", "path": "docs/final.md", "metadata": {"reviewed": True}},
+        )
+        assert edited_artifact.json()["metadata"]["reviewed"] is True
+
+        source = client.post(
+            f"/api/v1/projects/{project['id']}/sources",
+            json={"source_type": "user_document", "source_ref": "docs/final.md",
+                  "title": "Documento do usuário", "notes": "Fonte autorizada para contraste",
+                  "consent": "explicit"},
+        )
+        assert source.status_code == 201
+        source_id = source.json()["id"]
+        edited_source = client.put(
+            f"/api/v1/sources/{source_id}",
+            json={"source_type": "user_document", "source_ref": "docs/final.md",
+                  "title": "Documento revisado", "notes": "Contraste WCAG", "consent": "explicit"},
+        )
+        assert edited_source.json()["title"] == "Documento revisado"
+
+        results = client.get(
+            "/api/v1/memory/search", params={"q": "WCAG", "project_id": project["id"]}
+        ).json()
+        assert {item["kind"] for item in results} == {"source"}
+        exported = client.get("/api/v1/memory/export").json()
+        assert exported["artifacts"][0]["id"] == artifact_id
+        assert exported["memory_sources"][0]["id"] == source_id
+        assert client.delete(f"/api/v1/artifacts/{artifact_id}").status_code == 409
+        assert client.delete(f"/api/v1/artifacts/{artifact_id}?confirm=true").status_code == 200
+        assert client.delete(f"/api/v1/sources/{source_id}").status_code == 409
+        assert client.delete(f"/api/v1/sources/{source_id}?confirm=true").status_code == 200

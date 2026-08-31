@@ -43,6 +43,23 @@ class LessonRequest(BaseModel):
     confidence: float = Field(ge=0, le=1)
 
 
+class ArtifactRequest(BaseModel):
+    kind: str = Field(min_length=1, max_length=100)
+    path: str = Field(min_length=1, max_length=2_000)
+    checksum: str | None = Field(default=None, max_length=200)
+    metadata: dict = Field(default_factory=dict)
+
+
+class MemorySourceRequest(BaseModel):
+    source_type: str = Field(min_length=1, max_length=100)
+    source_ref: str = Field(default="", max_length=2_000)
+    title: str = Field(min_length=1, max_length=300)
+    notes: str = Field(default="", max_length=20_000)
+    consent: Literal["explicit", "revoked"] = "explicit"
+    retention: str = Field(default="project", max_length=100)
+    scope: str = Field(default="project", max_length=100)
+
+
 class RetentionPolicyRequest(BaseModel):
     category: Literal["action_ledger", "private_session"]
     retention_days: int | None = Field(default=None, ge=1, le=3650)
@@ -551,6 +568,114 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             permission="learning.write",
         )
         return lesson
+
+    @app.get("/api/v1/projects/{project_id}/artifacts")
+    def artifacts(project_id: str) -> list[dict]:
+        try:
+            return database.list_artifacts(project_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+
+    @app.post("/api/v1/projects/{project_id}/artifacts", status_code=201)
+    def create_artifact(project_id: str, request: ArtifactRequest) -> dict:
+        try:
+            artifact = database.create_artifact(
+                project_id, request.kind, request.path, request.checksum, request.metadata
+            )
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        database.record_action(
+            "Registrar artefato autorizado", "memory.artifacts.create", "succeeded",
+            parameters={"artifact_id": artifact["id"]}, project_id=project_id,
+            permission="memory.write",
+        )
+        return artifact
+
+    @app.put("/api/v1/artifacts/{artifact_id}")
+    def update_artifact(artifact_id: str, request: ArtifactRequest) -> dict:
+        try:
+            artifact = database.update_artifact(
+                artifact_id, request.kind, request.path, request.checksum, request.metadata
+            )
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Artefato não encontrado") from error
+        database.record_action(
+            "Editar artefato autorizado", "memory.artifacts.update", "succeeded",
+            parameters={"artifact_id": artifact_id}, project_id=artifact["project_id"],
+            permission="memory.write",
+        )
+        return artifact
+
+    @app.delete("/api/v1/artifacts/{artifact_id}")
+    def delete_artifact(artifact_id: str, confirm: bool = False) -> dict:
+        if not confirm:
+            raise HTTPException(status_code=409, detail="Confirmação explícita obrigatória")
+        try:
+            artifact = database.get_artifact(artifact_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Artefato não encontrado") from error
+        database.delete_memory_item("artifacts", artifact_id)
+        database.record_action(
+            "Apagar artefato autorizado", "memory.artifacts.delete", "succeeded",
+            parameters={"artifact_id": artifact_id}, project_id=artifact["project_id"],
+            permission="memory.delete.confirmed",
+        )
+        return {"deleted": True, "artifact_id": artifact_id}
+
+    @app.get("/api/v1/projects/{project_id}/sources")
+    def memory_sources(project_id: str) -> list[dict]:
+        try:
+            return database.list_memory_sources(project_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+
+    @app.post("/api/v1/projects/{project_id}/sources", status_code=201)
+    def create_memory_source(project_id: str, request: MemorySourceRequest) -> dict:
+        try:
+            source = database.create_memory_source(
+                project_id, request.source_type, request.source_ref, request.title, request.notes,
+                request.consent, request.retention, request.scope,
+            )
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Projeto não encontrado") from error
+        database.record_action(
+            "Registrar fonte de memória autorizada", "memory.sources.create", "succeeded",
+            parameters={"source_id": source["id"], "consent": source["consent"]},
+            project_id=project_id, permission="memory.write",
+        )
+        return source
+
+    @app.put("/api/v1/sources/{source_id}")
+    def update_memory_source(source_id: str, request: MemorySourceRequest) -> dict:
+        try:
+            source = database.update_memory_source(
+                source_id, request.source_type, request.source_ref, request.title, request.notes,
+                request.consent, request.retention, request.scope,
+            )
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Fonte não encontrada") from error
+        database.record_action(
+            "Editar fonte de memória autorizada", "memory.sources.update", "succeeded",
+            parameters={"source_id": source_id, "consent": source["consent"]},
+            project_id=source["project_id"], permission="memory.write",
+        )
+        return source
+
+    @app.delete("/api/v1/sources/{source_id}")
+    def delete_memory_source(source_id: str, confirm: bool = False) -> dict:
+        if not confirm:
+            raise HTTPException(status_code=409, detail="Confirmação explícita obrigatória")
+        try:
+            source = database.get_memory_source(source_id)
+        except KeyError as error:
+            raise HTTPException(status_code=404, detail="Fonte não encontrada") from error
+        database.delete_memory_item("memory_sources", source_id)
+        database.record_action(
+            "Apagar fonte de memória autorizada", "memory.sources.delete", "succeeded",
+            parameters={"source_id": source_id}, project_id=source["project_id"],
+            permission="memory.delete.confirmed",
+        )
+        return {"deleted": True, "source_id": source_id}
 
     @app.get("/api/v1/projects/{project_id}/suggestions")
     def suggestions(project_id: str) -> list[dict]:

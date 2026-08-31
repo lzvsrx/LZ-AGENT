@@ -220,6 +220,124 @@ class Database:
             raise KeyError(lesson_id)
         return self.get_lesson(lesson_id)
 
+    def create_artifact(
+        self, project_id: str, kind: str, path: str, checksum: str | None, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
+        self.get_project(project_id)
+        artifact_id, now = str(uuid.uuid4()), utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO artifacts
+                (id, project_id, kind, path, checksum, metadata_json, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (artifact_id, project_id, kind, path, checksum, json.dumps(metadata), now, now),
+            )
+        return self.get_artifact(artifact_id)
+
+    def get_artifact(self, artifact_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM artifacts WHERE id = ?", (artifact_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(artifact_id)
+        value = dict(row)
+        value["metadata"] = json.loads(value.pop("metadata_json") or "{}")
+        return value
+
+    def list_artifacts(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            if project_id:
+                self.get_project(project_id)
+                rows = connection.execute(
+                    "SELECT id FROM artifacts WHERE project_id = ? ORDER BY updated_at DESC",
+                    (project_id,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT id FROM artifacts ORDER BY updated_at DESC"
+                ).fetchall()
+        return [self.get_artifact(row[0]) for row in rows]
+
+    def update_artifact(
+        self, artifact_id: str, kind: str, path: str, checksum: str | None, metadata: dict[str, Any]
+    ) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                """UPDATE artifacts SET kind = ?, path = ?, checksum = ?, metadata_json = ?,
+                updated_at = ? WHERE id = ?""",
+                (kind, path, checksum, json.dumps(metadata), utc_now(), artifact_id),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(artifact_id)
+        return self.get_artifact(artifact_id)
+
+    def create_memory_source(
+        self, project_id: str, source_type: str, source_ref: str, title: str, notes: str,
+        consent: str, retention: str, scope: str,
+    ) -> dict[str, Any]:
+        self.get_project(project_id)
+        source_id, now = str(uuid.uuid4()), utc_now()
+        with self.connect() as connection:
+            connection.execute(
+                """INSERT INTO memory_sources
+                (id, project_id, source_type, source_ref, title, notes, consent, retention, scope,
+                 created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (source_id, project_id, source_type, source_ref, title, notes, consent, retention,
+                 scope, now, now),
+            )
+        return self.get_memory_source(source_id)
+
+    def get_memory_source(self, source_id: str) -> dict[str, Any]:
+        with self.connect() as connection:
+            row = connection.execute(
+                "SELECT * FROM memory_sources WHERE id = ?", (source_id,)
+            ).fetchone()
+        if row is None:
+            raise KeyError(source_id)
+        return dict(row)
+
+    def list_memory_sources(self, project_id: str | None = None) -> list[dict[str, Any]]:
+        with self.connect() as connection:
+            if project_id:
+                self.get_project(project_id)
+                rows = connection.execute(
+                    "SELECT * FROM memory_sources WHERE project_id = ? ORDER BY updated_at DESC",
+                    (project_id,),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    "SELECT * FROM memory_sources ORDER BY updated_at DESC"
+                ).fetchall()
+        return [dict(row) for row in rows]
+
+    def update_memory_source(
+        self, source_id: str, source_type: str, source_ref: str, title: str, notes: str,
+        consent: str, retention: str, scope: str,
+    ) -> dict[str, Any]:
+        with self.connect() as connection:
+            cursor = connection.execute(
+                """UPDATE memory_sources SET source_type = ?, source_ref = ?, title = ?, notes = ?,
+                consent = ?, retention = ?, scope = ?, updated_at = ? WHERE id = ?""",
+                (
+                    source_type, source_ref, title, notes, consent, retention, scope,
+                    utc_now(), source_id,
+                ),
+            )
+        if cursor.rowcount == 0:
+            raise KeyError(source_id)
+        return self.get_memory_source(source_id)
+
+    def delete_memory_item(self, table: str, item_id: str) -> bool:
+        if table not in {"artifacts", "memory_sources"}:
+            raise ValueError("Categoria de memória inválida")
+        with self.connect() as connection:
+            cursor = connection.execute(
+                f"DELETE FROM {table} WHERE id = ?",  # noqa: S608 - allowlist above
+                (item_id,),
+            )
+        return cursor.rowcount > 0
+
     def search_memory(
         self, query: str, *, project_id: str | None = None, limit: int = 50
     ) -> list[dict[str, Any]]:
@@ -251,6 +369,20 @@ class Database:
                 "id, project_id, title, description AS detail, created_at AS updated_at",
                 "title",
                 "description",
+            ),
+            (
+                "artifact",
+                "artifacts",
+                "id, project_id, kind AS title, path AS detail, updated_at",
+                "kind",
+                "path",
+            ),
+            (
+                "source",
+                "memory_sources",
+                "id, project_id, title, notes AS detail, updated_at",
+                "title",
+                "notes",
             ),
         )
         with self.connect() as connection:
@@ -382,6 +514,8 @@ class Database:
             "projects": self.list_projects(),
             "lessons_learned": self.list_lessons(),
             "suggestions": self.list_suggestions(),
+            "artifacts": self.list_artifacts(),
+            "memory_sources": self.list_memory_sources(),
             "actions": self.list_actions(limit=500),
         }
 
