@@ -24,6 +24,7 @@ from .localization import Translator, locale_fallbacks, normalize_locale, writin
 from .plugins import PluginExecutionError, PluginRegistry, PluginRunner
 from .providers import NativeAgentProvider
 from .service import AgentService
+from .voice_commands import VoiceCommandInterpreter
 from .web_research import ResearchError, fetch_public_text, wikipedia_search
 
 
@@ -37,6 +38,12 @@ class PrepareCommandRequest(BaseModel):
     properties: dict = Field(default_factory=dict)
     approved: bool = False
     autonomy_level: int = Field(default=2, ge=0, le=4)
+
+
+class VoiceCommandRequest(BaseModel):
+    transcript: str = Field(min_length=1, max_length=20_000)
+    locale: str = Field(default="pt-BR", max_length=35)
+    approved: bool = False
 
 
 class ProjectRequest(BaseModel):
@@ -150,6 +157,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     auth = AuthService(database)
     audio_capabilities = AudioCapabilityRegistry()
     command_planner = CommandPlanner()
+    voice_interpreter = VoiceCommandInterpreter(command_planner)
     translator = Translator(settings.root / "shared" / "localization")
     plugins = PluginRegistry(settings.root / "plugins")
     plugin_runner = PluginRunner()
@@ -513,6 +521,30 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             permission=properties["permission"],
         )
         return {"command": request.command, "properties": properties, "action_id": action["id"]}
+
+    @app.post("/api/v1/voice/commands/interpret")
+    def interpret_voice_command(request: VoiceCommandRequest) -> dict:
+        try:
+            locale = normalize_locale(request.locale)
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+        interpretation = voice_interpreter.interpret(
+            request.transcript, locale=locale, approved=request.approved
+        ).as_dict()
+        action = database.record_action(
+            interpretation["canonical_command"],
+            "voice.commands.interpret",
+            "ready" if interpretation["command_properties"]["executable"] else "needs_review",
+            parameters={"locale": locale, "transcript_retained": False},
+            result={
+                "intent": interpretation["command_properties"]["intent"],
+                "confidence": interpretation["confidence"],
+                "review_required": interpretation["review_required"],
+            },
+            permission="microphone.transcript.selected",
+        )
+        interpretation["action_id"] = action["id"]
+        return interpretation
 
     @app.get("/api/v1/actions")
     def actions(limit: int = Query(50, ge=1, le=500)) -> list[dict]:
