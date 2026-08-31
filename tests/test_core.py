@@ -662,7 +662,11 @@ def test_web_avatar_preview_is_served_from_official_generated_asset(tmp_path: Pa
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
         assert response.content == (
-            base.root / "assets" / "avatar" / "references" / "generated-preview.png"
+            base.root
+            / "assets"
+            / "avatar"
+            / "references"
+            / "generated-preview-transparent.png"
         ).read_bytes()
         home = client.get("/").text
         assert 'src="/avatar-preview.png"' in home

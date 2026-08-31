@@ -1,4 +1,4 @@
-const CACHE = 'lz-agent-shell-v2';
+const CACHE = 'lz-agent-shell-v3';
 const SHELL = ['/', '/avatar-preview.png', '/static/app.css', '/static/app.js', '/static/logo.svg', '/static/manifest.webmanifest'];
 
 self.addEventListener('install', event => {

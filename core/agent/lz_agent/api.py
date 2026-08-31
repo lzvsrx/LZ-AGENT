@@ -271,7 +271,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/avatar-preview.png", include_in_schema=False)
     def avatar_preview() -> FileResponse:
         return FileResponse(
-            settings.root / "assets" / "avatar" / "references" / "generated-preview.png",
+            settings.root
+            / "assets"
+            / "avatar"
+            / "references"
+            / "generated-preview-transparent.png",
             media_type="image/png",
         )
 
