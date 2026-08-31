@@ -8,7 +8,9 @@
   <description>
     <p>Cliente Linux alfa do LZ Agent para conversar com o núcleo local autorizado.</p>
   </description>
+  <icon type="stock">dev.lzagent.LzAgent</icon>
   <launchable type="desktop-id">dev.lzagent.LzAgent.desktop</launchable>
+  <url type="homepage">https://github.com/lzvsrx/LZ-AGENT</url>
   <content_rating type="oars-1.1"/>
   <releases>
     <release version="0.1.0-alpha" date="2026-08-31"/>

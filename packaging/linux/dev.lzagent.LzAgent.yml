@@ -18,7 +18,10 @@ modules:
       - ln -s /app/lib/lz-agent/lz_agent_linux /app/bin/lz_agent_linux
       - install -Dm644 dev.lzagent.LzAgent.desktop /app/share/applications/dev.lzagent.LzAgent.desktop
       - install -Dm644 dev.lzagent.LzAgent.metainfo.xml /app/share/metainfo/dev.lzagent.LzAgent.metainfo.xml
-      - install -Dm644 dev.lzagent.LzAgent.png /app/share/icons/hicolor/1024x1024/apps/dev.lzagent.LzAgent.png
+      - install -Dm644 dev.lzagent.LzAgent-64.png /app/share/icons/hicolor/64x64/apps/dev.lzagent.LzAgent.png
+      - install -Dm644 dev.lzagent.LzAgent-128.png /app/share/icons/hicolor/128x128/apps/dev.lzagent.LzAgent.png
+      - install -Dm644 dev.lzagent.LzAgent-256.png /app/share/icons/hicolor/256x256/apps/dev.lzagent.LzAgent.png
+      - install -Dm644 dev.lzagent.LzAgent-1024.png /app/share/icons/hicolor/1024x1024/apps/dev.lzagent.LzAgent.png
     sources:
       - type: dir
         path: ../../apps/linux/build/linux/x64/release/bundle
@@ -29,4 +32,10 @@ modules:
         path: dev.lzagent.LzAgent.metainfo.xml
       - type: file
         path: ../../assets/brand/lz-agent-icon-1024.png
-        dest-filename: dev.lzagent.LzAgent.png
+        dest-filename: dev.lzagent.LzAgent-1024.png
+      - type: file
+        path: dev.lzagent.LzAgent-64.png
+      - type: file
+        path: dev.lzagent.LzAgent-128.png
+      - type: file
+        path: dev.lzagent.LzAgent-256.png
