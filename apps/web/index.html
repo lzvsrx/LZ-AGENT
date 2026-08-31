@@ -49,7 +49,10 @@
           <p id="auth-message" role="status" aria-live="polite"></p>
         </details>
         <div class="hero">
-          <img id="avatar" src="/static/logo.svg" alt="LZ Agent pronto e aguardando" width="180" height="180">
+          <div id="avatar-stage" class="avatar-stage" data-state="idle">
+            <img id="avatar" src="/avatar-preview.png" alt="Robô LZ Agent pronto e aguardando" width="260" height="260">
+            <span class="avatar-signal" aria-hidden="true"></span>
+          </div>
           <div><p class="eyebrow">Estado: <span id="state">Pronto</span></p><h1>Como posso ajudar?</h1>
           <p>Converse em modo local. Ações são auditadas; sessões privadas não guardam conteúdo.</p></div>
         </div>
@@ -58,6 +61,14 @@
           <textarea id="message" rows="4" required maxlength="20000" placeholder="Digite uma tarefa…"></textarea>
           <label class="check"><input id="private" type="checkbox"> Sessão privada (não reter esta conversa)</label>
           <div class="voice-controls"><button id="voice" type="button" aria-pressed="false">Usar microfone</button><span id="voice-status" role="status" aria-live="polite">Microfone inativo.</span></div>
+          <div class="speech-output">
+            <label class="check"><input id="speak-response" type="checkbox" checked> Falar respostas</label>
+            <label for="speech-voice">Voz do LZ Agent neste dispositivo</label>
+            <select id="speech-voice"><option value="">Voz compatível automática</option></select>
+            <label for="speech-rate">Velocidade da fala</label>
+            <input id="speech-rate" type="range" min="0.7" max="1.3" step="0.1" value="1" aria-valuetext="Normal">
+            <button id="stop-speaking" type="button">Parar fala</button>
+          </div>
           <small>O microfone só é ativado pelo botão. O reconhecimento pode usar o serviço de fala configurado no navegador.</small>
           <button class="primary" type="submit">Enviar</button>
         </form>

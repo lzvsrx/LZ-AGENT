@@ -268,6 +268,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def avatar_state() -> dict:
         return avatar.current()
 
+    @app.get("/avatar-preview.png", include_in_schema=False)
+    def avatar_preview() -> FileResponse:
+        return FileResponse(
+            settings.root / "assets" / "avatar" / "references" / "generated-preview.png",
+            media_type="image/png",
+        )
+
     @app.put("/api/v1/avatar/state")
     def set_avatar_state(request: AvatarStateRequest) -> dict:
         result = avatar.update(
