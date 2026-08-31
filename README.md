@@ -228,8 +228,12 @@ persistido. A inspeção de documentos calcula metadados/hash e processa o arqui
 retê-lo por padrão.
 
 Projetos e lições autorizadas podem ser corrigidos com `PUT /api/v1/projects/{id}` e
-`PUT /api/v1/lessons/{id}`. `GET /api/v1/memory/search?q=...` pesquisa projetos, lições e sugestões,
-com filtro opcional por projeto. `GET/PUT /api/v1/memory/retention` consulta ou altera retenção;
+`PUT /api/v1/lessons/{id}`. Fontes e artefatos vinculados ao projeto possuem criação, listagem,
+edição, busca, exportação e exclusão confirmada em `/api/v1/projects/{id}/sources`,
+`/api/v1/sources/{id}`, `/api/v1/projects/{id}/artifacts` e `/api/v1/artifacts/{id}`. O consentimento
+da fonte é explícito ou revogado e todas as mudanças entram no Action Ledger.
+`GET /api/v1/memory/search?q=...` pesquisa projetos, lições, sugestões, fontes e artefatos, com filtro
+opcional por projeto. `GET/PUT /api/v1/memory/retention` consulta ou altera retenção;
 `null` preserva a categoria até exclusão explícita. `POST /api/v1/memory/purge` exige a frase
 `APAGAR MEMÓRIA EXPIRADA`, remove somente dados vencidos pela política e registra o expurgo.
 

@@ -1,6 +1,6 @@
 # Auditoria de implementação do Documento Mestre 2026
 
-Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, testes e artefatos reais.
+Atualizado em 31/08/2026. Esta matriz compara o PDF canônico com código, testes e artefatos reais.
 `Parcial` não significa suporte de produção e `planejado` não deve aparecer como funcional em releases.
 
 | Requisito do documento | Estado | Evidência atual | Próximo critério de conclusão |
@@ -10,7 +10,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 | Android Compose | Parcial funcional | build CLI/VS Code, login, chat, fala opt-in, lint e APK | UI adaptativa, instrumentação TalkBack/Switch Access e assinatura |
 | Linux Flutter | Parcial funcional | login/chat, análise/widget tests, tar.gz e manifesto/build Flatpak 25.08 na CI | Portals nativos e matriz real Wayland/X11/distribuições |
 | Action Ledger | Parcial funcional | chat, documentos, memória e sugestões auditados | duração, erros, aprovação e modelo em toda ferramenta |
-| Memória por projeto | Parcial funcional | projetos/lições editáveis, busca por texto/escopo, retenção do ledger, expurgo confirmado, sugestões, exportação, exclusão, backup e restauração SQLite verificados | fontes/artefatos editáveis, criptografia por plataforma e retenção por projeto/sessão |
+| Memória por projeto | Parcial funcional | projetos, lições, fontes e artefatos editáveis/pesquisáveis/exportáveis; consentimento de fonte, exclusão confirmada, retenção do ledger, backup e restauração SQLite testados | criptografia por plataforma e retenção granular por projeto/sessão |
 | Suggestion Engine | Parcial funcional | sugestão com justificativa/origem e decisão do usuário | geração contextual, ranking e explicação entre projetos |
 | Checkpoint/diff/rollback | Parcial funcional | checkpoint captura commit, arquivos e diff Git limitado; restauração cria backup de segurança | aplicação/reversão de patch com confirmação e testes pós-mudança |
 | IA própria do agente | Núcleo nativo inicial | `native-core-v1` local, auditável e sem Ollama/provedor externo | corpus licenciado, treinamento, pesos próprios, avaliações e assinatura |
@@ -36,7 +36,7 @@ Atualizado em 30/08/2026. Esta matriz compara o PDF canônico com código, teste
 
 ## Ordem de implementação recomendada
 
-1. Completar governança de memória: fontes/artefatos, criptografia por plataforma e retenção por projeto/sessão.
+1. Completar governança de memória: criptografia por plataforma e retenção granular por projeto/sessão.
 2. Implementar e auditar helper LPAC/AppContainer assinado antes de executar plugins no Windows.
 3. Implementar um provedor real e um local atrás do mesmo contrato, com consentimento e métricas.
 4. Fechar acessibilidade e empacotamento de um fluxo principal em Windows, Android e Linux.
