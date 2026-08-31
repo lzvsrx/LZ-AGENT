@@ -668,8 +668,12 @@ def test_web_avatar_preview_is_served_from_official_generated_asset(tmp_path: Pa
             / "references"
             / "generated-preview-transparent.png"
         ).read_bytes()
+        transparent = Image.open(BytesIO(response.content))
+        assert transparent.mode == "RGBA"
+        assert transparent.getchannel("A").getextrema() == (0, 255)
         home = client.get("/").text
         assert 'src="/avatar-preview.png"' in home
+        assert 'href="/static/avatar.css"' in home
         assert 'id="speech-voice"' in home
 
 
