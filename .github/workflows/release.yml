@@ -102,7 +102,7 @@ jobs:
           sha256sum lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz > lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz.sha256
           sha256sum lz-agent-${{ github.ref_name }}-linux-x64.flatpak > lz-agent-${{ github.ref_name }}-linux-x64.flatpak.sha256
           tar -tzf lz-agent-${{ github.ref_name }}-linux-x64-alpha.tar.gz >/dev/null
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: linux-x64-${{ github.ref_name }}
           path: |
