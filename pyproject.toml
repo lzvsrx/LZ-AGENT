@@ -10,18 +10,18 @@ readme = "README.md"
 requires-python = ">=3.14"
 license = { text = "Apache-2.0" }
 dependencies = [
-  "fastapi==0.141.1",
+  "fastapi==0.142.1",
   "uvicorn[standard]>=0.35,<1",
   "httpx>=0.28,<1",
   "python-multipart>=0.0.20,<1",
   "pillow==12.3.0",
-  "pypdf==6.16.2",
+  "pypdf==6.19.0",
   "argon2-cffi==25.1.0",
   "sounddevice>=0.5,<1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.4,<9", "pytest-cov>=6.2,<7", "ruff>=0.12,<1"]
+dev = ["pytest>=8.4,<10", "pytest-cov>=6.2,<8", "ruff>=0.12,<1"]
 
 [project.scripts]
 lz-agent = "lz_agent.main:run"
